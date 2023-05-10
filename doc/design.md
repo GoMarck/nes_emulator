@@ -11,3 +11,17 @@
 3. CPU与PPU如何进行数据层面的交互？
 4. 卡带的数据如何读入到系统中，CPU如何取卡带中的数据？
 5. CPU的指令周期如何模拟，合适刷新页面？
+
+
+# CPU 内存
+CPU的内存布局可分为 3 块：
+1. ROM
+2. RAM
+3. I/O Registers
+
+它们之间由总线进行串联，如下图所示：
+
+![](image/cpu%E5%86%85%E5%AD%98%E5%B8%83%E5%B1%80.png)
+
+### ROM
+ROM 全称为 Read Only Memory，即只读内存，从卡带（Cartridge）加载而来。ROM 内部主要放置一些
