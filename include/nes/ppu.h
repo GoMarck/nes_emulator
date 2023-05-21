@@ -1,4 +1,6 @@
-#ifdef  NES_PPU_H
-#define NES_PPU_H
+#pragma once
 
-#endif
+namespace nes {
+class PPU {
+};
+}
