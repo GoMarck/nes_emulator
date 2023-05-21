@@ -27,6 +27,12 @@ cycle 321 ~ 336：获取下一个scanline的最开始的2个tile，总共耗费1
 
 cycle 337 ~ 340：耗费4个PPU时钟周期获取Nametable bytes，但是目的未定义
 
+PPU的内部寄存器：
+1. v: 存储的是当前的 VRAM 地址 (15 bits)
+2. t: Temporary VRAM address (15 bits); can also be thought of as the address of the top left onscreen tile.
+3. x: Fine X scroll (3 bits)
+4. w: First or second write toggle (1 bit)
+
 参考链接：
 1. https://www.nesdev.org/wiki/PPU_rendering
 2. https://www.nesdev.org/w/images/default/4/4f/Ppu.svg
