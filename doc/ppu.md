@@ -7,7 +7,7 @@ PPU规格：
 1. Pre-Render（-1，261）：预渲染时期，一开始或者结尾的扫描线会处于这个时期
 2. Render（0 ~ 239）
 3. Post-Render（240） 
-4. V-Blank（241 ~ 260）
+4. V-Blank（241 ~ 260）：The PPU generates a video signal for one frame of animation, then it rests for a brief period called vertical blanking. The CPU can load graphics data into the PPU only during this rest period. From NMI to the pre-render scanline, the NTSC NES PPU stays off the bus for 20 scanlines or 2273 cycles. Taking into account overhead to get in and out of the NMI handler, you can probably use roughly 2250 cycles. To get the most out of limited vblank time, don't compute your changes in vblank time. Instead, prepare a buffer in main RAM (for example, use unused parts of the stack at $0100-$019F) before vblank, and then copy from that buffer into VRAM during vblank. On NTSC, count on being able to copy 160 bytes to nametables or the palette using a moderately unrolled loop, plus one 256-byte display list to OAM.
 
 
 
@@ -33,9 +33,30 @@ PPU的内部寄存器：
 3. x: Fine X scroll (3 bits)
 4. w: First or second write toggle (1 bit)
 
+而在渲染时期，v和t的组成如下：
+```bash
+yyy NN YYYYY XXXXX
+||| || ||||| +++++-- coarse X scroll
+||| || +++++-------- coarse Y scroll
+||| ++-------------- nametable select
++++----------------- fine Y scroll
+```
+另外由于PPU的内存地址表示只需要 14 bits，因此 v 寄存器在作为PPU的内存地址表示时，需要屏蔽最高位。
+
 参考链接：
 1. https://www.nesdev.org/wiki/PPU_rendering
 2. https://www.nesdev.org/w/images/default/4/4f/Ppu.svg
 3. https://www.nesdev.org/wiki/PPU_scrolling
 
 奇数帧和偶数帧：
+
+我们为什么需要vblank：当PPU处于vblank时期时，说明PPU处于休息期间，此时CPU就可以与PPU进行数据交互，传输下一帧画面等。当PPU进入到vblank时期时，它会通过NMI中断通知CPU。链接：https://www.nesdev.org/wiki/The_frame_and_NMIs
+
+
+OAM渲染原理以及数据upload理解，之后设计架构图直接开干，下周输出架构图，并开始尝试设计接口等。
+
+剩余工作：
+1. 输出整体的架构图，CPU、PPU、卡带、Bus等的关系
+2. 确认CPU和PPU之间的配合关系
+3. 理清楚PPU OAM人物的渲染逻辑以及数据装载等逻辑
+4. 学习下SFML的用法
