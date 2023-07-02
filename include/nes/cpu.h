@@ -2,5 +2,6 @@
 
 namespace nes {
 class CPU {
+  
 };
 }

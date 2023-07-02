@@ -38,3 +38,7 @@ ROM 全称为 Read-Only-Memory，即只读内存，它从卡带（Cartridge）�
 ![](image/prg-rom.png)
 
 ### 0.2 I/O Registers
+
+CPU指令集分类：按照指令集的寻址方式不同进行分类
+
+http://www.oxyron.de/html/opcodes02.html
