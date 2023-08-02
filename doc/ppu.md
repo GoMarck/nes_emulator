@@ -7,12 +7,13 @@ PPU 的全称为 Picture Process Unit，即图像处理单元，可以把它理�
 - PPU 精灵（Sprites）渲染原理
 - PPU 扫描线（Scanline）
 - PPU OAM
+- PPU 滚动
 
 ## 0. PPU 和 CPU 的关系
-在 NES 中，CPU 主要负责执行程序，而 PPU 则主要负责对每一帧画面进行渲染。
-
+在 NES 中，CPU 主要负责执行程序、接受外部输入、向 PPU 传输数据等，而 PPU 则主要负责对每一帧画面进行渲染。
+![](image/架构图.png)
 ## 1. PPU 的内存布局
-
+![](image/PPU内存布局图.png)
 ## 2. PPU 的内部寄存器
 ## 3. PPU 渲染原理
 PPU 的渲染可以分为两个部分：分别为背景渲染以及精灵渲染。精灵即为我们在游戏中控制的角色以及一些可移动的物体，如马里奥、库巴、蘑菇等，这两者渲染的结合最后便组成了我们的游戏画面。而这里面首先需要解决的就是如何获取到游戏画面的数据以及这些数据是如何进行渲染的。这里面会涉及到 PPU 几个核心的概念：
@@ -232,7 +233,5 @@ CPU 通过写入 $2003（OAMADDR），将某个 OAM 的地址起始值写入 PPU
 ---
 DMA 全称为 Direct Memory Access，它允许将 CPU 中某一页（256 bytes）的内存直接更新到 OAM 中。具体方式是 CPU 通过写入 $4014（OAMDMA），指定一个内存页，接着经过 513-514 个 CPU 时钟周期，这一页中的 256 个字节将会被拷贝到 OAM 中。这是最常用的更新 Sprite 的方式。 
 
-## 3. PPU 背景渲染原理
-## 4. PPU 精灵（Sprites）渲染原理
 ## 5. PPU 扫描线（Scanline）
 ![](https://www.nesdev.org/w/images/default/4/4f/Ppu.svg)
