@@ -5,6 +5,7 @@ PPU 的全称为 Picture Process Unit，即图像处理单元，可以把它理�
 - PPU 渲染原理
 - PPU 扫描线（Scanline）
 - PPU 滚动
+- PPU 设计
 
 ## 0. PPU 和 CPU 的关系
 在 NES 中，CPU 主要负责执行程序、接受外部输入、向 PPU 传输数据等，而 PPU 则主要负责对每一帧画面进行渲染。
@@ -231,6 +232,58 @@ CPU 通过写入 $2003（OAMADDR），将某个 OAM 的地址起始值写入 PPU
 DMA 全称为 Direct Memory Access，它允许将 CPU 中某一页（256 bytes）的内存直接更新到 OAM 中。具体方式是 CPU 通过写入 $4014（OAMDMA），指定一个内存页，接着经过 513-514 个 CPU 时钟周期，这一页中的 256 个字节将会被拷贝到 OAM 中。这是最常用的更新 Sprite 的方式。 
 
 ## 3. PPU 扫描线（Scanline）
+PPU 渲染的方式是通过按行从顶至下渲染扫描线（Scanline）完成的。PPU 总共需要渲染 262 条扫描线，每条扫描线包含 341 个 PPU 时钟周期，每个时钟周期就会产生一个像素，扫描线可分为以下类型：
+- Pre-Render Sanline
+- Visible Scanlines
+- Post-Render Scanline
+- Vertical blanking Scalines
+
+### 3.0 Pre-Render Scanline(-1 0r 261)
+当扫描线处于 -1（初始化时期）或者 261 时，处于预渲染时期。这条扫描线的主要目的是为了将数据填充进 shift registers 中，而这些数据就是下一条扫描线的前 2 个 Tile 的数据。虽然这个时期并不会产生任何用于渲染的像素，但是 PPU 仍然会像 Visible Scanlines 一样执行相同的内存访问。
+
+此外该 Scanline 的长度还会区分奇偶帧。当为奇数帧的时候，最后一个 PPU 周期将会被跳过（cycle 340不会被执行，直接从 (339, 261) 跳到 (0, 0)），而对于偶数帧来说，cycle 340 则是会被正常执行（从(340, 261) 跳到 (0, 0)）。
+
+而在 cycle 280 ～ 304 期间，当允许渲染的时候，v 寄存器的 verital bits 将会被重置：
+```bash
+v: GHIA.BC DEF..... <- t: GHIA.BC DEF.....
+```
+
+### 3.1 Visible Scanlines(0 ~ 239)
+可见扫描线，顾名思义就是真正用于产生渲染像素的扫描线，它包含了背景渲染以及精灵渲染两个部分。由于在这个时期内，PPU 正忙于从 PPU 内存中取数据，因此程序不应该在这个时期访问 PPU 的内存，除非渲染被禁止了。
+
+#### cycle 0
+这是一个空的 PPU 时钟周期，什么都不干。
+
+#### cycle 1-256
+从 cycle 1 开始，Tile 相关的数据将会被获取到，每次内存访问将会消耗 2 个 PPU 时钟周期，而一个 Tile 的相关数据必须进行 4 次内存访问，因此每个 Tile 的数据获取将会消耗 8 个 PPU 时钟周期：
+- NameTable byte
+- Attribute table byte
+- Tile low
+- Tile high（+8bytes from Tile low）
+
+
+
+#### cycle 257-320
+看不懂
+
+#### cycle 321-336
+下一行扫描线的前 2 个 Tile 相关的数据将被获取，共占用 16 个 PPU 时钟周期：
+- NameTable byte
+- Attribute table byte
+- Tile low
+- Tile high（+8bytes from Tile low）
+
+#### cycle 337-340
+什么都不做。
+
+### 3.2 Post-Render Scanline(240)
+PPU 此时处于空闲状态。
+
+### 3.3 Vertical blanking Scalines(241~260)
+在 Scanline 241 的 cycle 1 时，VBlank 标志位将会被设置，因此 VBlank 的 NMI 中断也会被触发。在这个期间 PPU 不会做任何的内存访问，因此在这个时期更新数据将会是十分安全的。
+
+
+详细的 PPU 扫描线执行图如下所示：
 ![](https://www.nesdev.org/w/images/default/4/4f/Ppu.svg)
 
 ## 4. PPU 滚动（Scorlling）
@@ -382,3 +435,5 @@ tile address = 0x2000 | (v & 0x0FFF)
 ```bash
 attribute address = 0x23C0 | (v & 0x0C00) | ((v >> 4) & 0x38) | ((v >> 2) & 0x07)
 ```
+
+## 5. PPU 设计
