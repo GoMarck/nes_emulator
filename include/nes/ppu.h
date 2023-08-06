@@ -11,9 +11,16 @@ namespace nes {
 class PPU {
 public:
   PPU(std::shared_ptr<PictureBus> bus, std::shared_ptr<IScreen> screen);
+
   ~PPU() noexcept;
 
   void Tick();
+
+  void SetData(Byte data);
+
+  void GetData(Byte data);
+
+  void SetMask(Byte data);
   
 private:
   enum State {
@@ -22,6 +29,14 @@ private:
     POST_RENDER,
     VERTICAL_BLANK
   };
+
+  bool EnableRender() const {
+    return enable_background_render_ && enable_sprite_render_;
+  }
+
+  void IncreaseCoarseX();
+
+  void IncreaseCoarseY();
 
   // PPU access memory via Picture Bus. 
   std::shared_ptr<PictureBus> picture_bus_;
@@ -41,6 +56,18 @@ private:
   // First/second write toggle. 
   bool w;
 
+  // Shift register for background first tile.
+  Word background_tile_low_;
+
+  // Shift register for background second tile.
+  Word background_tile_high_;
+
+  // Shift register for background second attribute byte.
+  Byte background_attr_low_;
+
+  // Shift register for background first attribute byte.
+  Byte background_attr_high_;
+
   // OAM.
   std::vector<Byte> oam_;
 
@@ -52,5 +79,14 @@ private:
 
   // Current state.
   State state_;
+
+  // Output frame data.
+  std::vector<std::vector<Byte>> frame_data_;
+
+  // Indicate enable render background or not.
+  bool enable_background_render_;
+
+  // Indicate enable render sprites or not.
+  bool enable_sprite_render_;
 };
 }  // namespace nes
