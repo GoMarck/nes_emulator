@@ -14,13 +14,58 @@ class PPU {
 
   ~PPU() noexcept;
 
+  /// Tick once, run a PPU clock cycle.
   void Tick();
 
-  void SetData(Byte data);
+  /// Write PPUCTRL($2000) from CPU to PPU.
+  ///
+  /// \param data 8 bits data write from CPU.
+  void WriteControl(Byte data);
 
-  void GetData(Byte data);
+  /// Write PPUMASK($2001) from CPU to PPU.
+  ///
+  /// \param data 8 bits data write from CPU.
+  void WriteMask(Byte data);
 
-  void SetMask(Byte data);
+  /// Read PPUSTATUS($2002) from PPU to CPU.
+  ///
+  /// \return 8 bits data.
+  Byte ReadStatus();
+
+  /// Write PPUSCROL($2005) from CPU to PPU.
+  ///
+  /// \param data 8 bits data write from CPU.
+  void WriteScroll(Byte data);
+
+  /// Write PPUADDR($2006) from CPU to PPU.
+  ///
+  /// \param data 8 bits data write from CPU.
+  void WriteAddress(Byte data);
+
+  /// Write PPUDATA($2007) from CPU to PPU.
+  ///
+  /// \param data 8 bits data write from CPU.
+  void WriteData(Byte data);
+
+  /// Read PPUDATA($2007) from PPU to CPU.
+  ///
+  /// \return 8 bits data.
+  Byte Readata();
+
+  /// Write OAMADDR($2003) from CPU to PPU.
+  ///
+  /// \param data 8 bits data write from CPU.
+  void WriteOAMAddress(Byte data);
+
+  /// Write OAMDATA($2004) from CPU to PPU.
+  ///
+  /// \param data 8 bits data write from CPU.
+  void WriteOAMData(Byte data);
+
+  /// Write OAMDMA($4014) from CPU to PPU.
+  ///
+  /// \param data 8 bits data write from CPU.
+  void WriteDMA(Byte data);
 
  private:
   enum State { PRE_RENDER = 0, RENDER, POST_RENDER, VERTICAL_BLANK };
@@ -66,7 +111,7 @@ class PPU {
   // OAM.
   std::vector<Byte> oam_;
 
-  // Secondary OAM
+  // Secondary OAM, current scanline 8 sprites data stored here.
   std::vector<Byte> secondary_oam_;
 
   // Current Scanline number.
@@ -83,5 +128,23 @@ class PPU {
 
   // Indicate enable render sprites or not.
   bool enable_sprite_render_;
+
+  // Indicate enable render leftmost 8 pixel column background or not.
+  bool enable_edge_background_render_;
+
+  // Indicate enable render leftmost 8 pixel column sprite or not.
+  bool enable_edge_sprite_render_;
+
+  // Indicate is odd frame or even frame.
+  bool odd_frame_;
+
+  // Indicate vertical blank or not.
+  bool vertical_blank_;
+
+  // Indicate trigger sprite 0 hit or not.
+  bool sprite_zero_hit_;
+
+  // VRAM address increasement according to PPUCTRL bit 3, 1 or 32.
+  int increasement_;
 };
 }  // namespace nes
