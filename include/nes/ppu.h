@@ -9,7 +9,7 @@
 
 namespace nes {
 class PPU {
-public:
+ public:
   PPU(std::shared_ptr<PictureBus> bus, std::shared_ptr<IScreen> screen);
 
   ~PPU() noexcept;
@@ -21,14 +21,9 @@ public:
   void GetData(Byte data);
 
   void SetMask(Byte data);
-  
-private:
-  enum State {
-    PRE_RENDER = 0,
-    RENDER,
-    POST_RENDER,
-    VERTICAL_BLANK
-  };
+
+ private:
+  enum State { PRE_RENDER = 0, RENDER, POST_RENDER, VERTICAL_BLANK };
 
   bool EnableRender() const {
     return enable_background_render_ && enable_sprite_render_;
@@ -38,7 +33,7 @@ private:
 
   void IncreaseCoarseY();
 
-  // PPU access memory via Picture Bus. 
+  // PPU access memory via Picture Bus.
   std::shared_ptr<PictureBus> picture_bus_;
 
   // Screen for receiving the frame data.
@@ -53,7 +48,7 @@ private:
   // Fine X position.
   Byte x;
 
-  // First/second write toggle. 
+  // First/second write toggle.
   bool w;
 
   // Shift register for background first tile.
