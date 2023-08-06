@@ -8,11 +8,21 @@
 #include "nes/type.h"
 
 namespace nes {
+
+/// Picture Process Unit for rendering each frame. Responsible for outputting
+/// the picture pixel data of each frame and transmitting it to the screen.
 class PPU {
  public:
+  /// Construct from PictureBus and Screen objects.
+  ///
+  /// \param bus Picture bus shared pointer.
+  /// \param screen Screen shared pointer.
   PPU(std::shared_ptr<PictureBus> bus, std::shared_ptr<IScreen> screen);
 
   ~PPU() noexcept;
+
+  /// Reset PPU status.
+  void Reset();
 
   /// Tick once, run a PPU clock cycle.
   void Tick();
@@ -74,77 +84,79 @@ class PPU {
     return enable_background_render_ && enable_sprite_render_;
   }
 
+  /// Increase the current coarse X position.
   void IncreaseCoarseX();
 
+  /// Increase the current coarse Y position.
   void IncreaseCoarseY();
 
-  // PPU access memory via Picture Bus.
+  /// PPU access memory via Picture Bus.
   std::shared_ptr<PictureBus> picture_bus_;
 
-  // Screen for receiving the frame data.
+  /// Screen for receiving the frame data.
   std::shared_ptr<IScreen> screen_;
 
-  // Current VRAM address, only have 15 valid bits actually.
+  /// Current VRAM address, only have 15 valid bits actually.
   Word v;
 
-  // Tempoary VRAM address, only have 15 valid bits actually.
+  /// Tempoary VRAM address, only have 15 valid bits actually.
   Word t;
 
-  // Fine X position.
+  /// Fine X position.
   Byte x;
 
-  // First/second write toggle.
+  /// First/second write toggle.
   bool w;
 
-  // Shift register for background first tile.
+  /// Shift register for background first tile.
   Word background_tile_low_;
 
-  // Shift register for background second tile.
+  /// Shift register for background second tile.
   Word background_tile_high_;
 
-  // Shift register for background second attribute byte.
+  /// Shift register for background second attribute byte.
   Byte background_attr_low_;
 
-  // Shift register for background first attribute byte.
+  /// Shift register for background first attribute byte.
   Byte background_attr_high_;
 
-  // OAM.
+  /// OAM.
   std::vector<Byte> oam_;
 
-  // Secondary OAM, current scanline 8 sprites data stored here.
+  /// Secondary OAM, current scanline 8 sprites data stored here.
   std::vector<Byte> secondary_oam_;
 
-  // Current Scanline number.
+  /// Current Scanline number.
   int scanline_number_;
 
-  // Current state.
+  /// Current state.
   State state_;
 
-  // Output frame data.
+  /// Output frame data.
   std::vector<std::vector<Byte>> frame_data_;
 
-  // Indicate enable render background or not.
+  /// Indicate enable render background or not.
   bool enable_background_render_;
 
-  // Indicate enable render sprites or not.
+  /// Indicate enable render sprites or not.
   bool enable_sprite_render_;
 
-  // Indicate enable render leftmost 8 pixel column background or not.
+  /// Indicate enable render leftmost 8 pixel column background or not.
   bool enable_edge_background_render_;
 
-  // Indicate enable render leftmost 8 pixel column sprite or not.
+  /// Indicate enable render leftmost 8 pixel column sprite or not.
   bool enable_edge_sprite_render_;
 
-  // Indicate is odd frame or even frame.
+  /// Indicate is odd frame or even frame.
   bool odd_frame_;
 
-  // Indicate vertical blank or not.
+  /// Indicate vertical blank or not.
   bool vertical_blank_;
 
-  // Indicate trigger sprite 0 hit or not.
+  /// Indicate trigger sprite 0 hit or not.
   bool sprite_zero_hit_;
 
-  // VRAM address increasement according to PPUCTRL bit 3, 1 or 32.
+  /// VRAM address increasement according to PPUCTRL bit 3, 1 or 32.
   int increasement_;
 };
 }  // namespace nes
