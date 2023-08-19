@@ -32,26 +32,27 @@ bool Cartridge::Init() {
       "parse file real path failed: " + std::string(strerror(errno)));
   path_ = std::string(absoulte_path);
 
-  FILE *file = fopen(path_.c_str(), "r");  
-  RETURN_FALSE_REPENT_IF(file == nullptr, "Failed to open file: " + std::string(strerror(errno))); 
+  FILE *file = fopen(path_.c_str(), "r");
+  RETURN_FALSE_REPENT_IF(
+      file == nullptr, "Failed to open file: " + std::string(strerror(errno)));
 
   fseek(file, 0L, SEEK_END);
   auto file_size = ftell(file);
-  fseek(file, 0L, SEEK_SET);  
+  fseek(file, 0L, SEEK_SET);
   if (file_size == 0) {
     NES_LOG(ERROR) << "Empty file!";
     fclose(file);
     return false;
   }
 
-  std::vector<Byte> contents = ReadRomFile(file, file_size);
+  // std::vector<Byte> contents = ReadRomFile(file, file_size);
   fclose(file);
 
-  RETURN_FALSE_IF(ParseHeader(contents.data()));
+  // RETURN_FALSE_IF(ParseHeader(contents.data()));
   return true;
 }
 
-Byte Cartridge::Read(Address address) {}
+Byte Cartridge::Read(Address address) { return 0; }
 
 bool Cartridge::ParseHeader(Byte *header) {
   RETURN_FALSE_REPENT_IF(header == nullptr, "header pointer is null");
