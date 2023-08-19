@@ -34,6 +34,8 @@ class Cartridge {
   /// \return True if the file header is valid.
   bool ParseHeader(Byte *header);
 
+  bool ReadRomFile(FILE *fp, Byte *data, size_t size);
+
   /// Game's rom file path.
   std::string path_;
 

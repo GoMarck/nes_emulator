@@ -32,23 +32,29 @@ bool Cartridge::Init() {
       "parse file real path failed: " + std::string(strerror(errno)));
   path_ = std::string(absoulte_path);
 
-  FILE *file = fopen(path_.c_str(), "r");
+  FILE *file = fopen(path_.c_str(), "rb");
   RETURN_FALSE_REPENT_IF(
       file == nullptr, "Failed to open file: " + std::string(strerror(errno)));
 
   fseek(file, 0L, SEEK_END);
-  auto file_size = ftell(file);
+  auto size = ftell(file);
   fseek(file, 0L, SEEK_SET);
-  if (file_size == 0) {
+  if (size == 0) {
     NES_LOG(ERROR) << "Empty file!";
     fclose(file);
     return false;
   }
 
-  // std::vector<Byte> contents = ReadRomFile(file, file_size);
+  std::vector<Byte> contents;
+  contents.reserve(size);
+  if (!ReadRomFile(file, contents.data(), size)) {
+    NES_LOG(ERROR) << "Read rom file failed!";
+    fclose(file);
+    return false;
+  }
   fclose(file);
 
-  // RETURN_FALSE_IF(ParseHeader(contents.data()));
+  RETURN_FALSE_IF(ParseHeader(contents.data()));
   return true;
 }
 
@@ -72,9 +78,15 @@ bool Cartridge::ParseHeader(Byte *header) {
       (sixth_byte & 0x1) == 0 ? MirrorType::HORIZONTAL : MirrorType::VERTICAL;
   exist_battery_ram_ = (sixth_byte & 0x2) != 0;
   exist_trainer_ = (sixth_byte & 0x4) != 0;
-  mmaper_number_ = (sixth_byte & 0x7) | (seventh_byte & 0x70);
+  mmaper_number_ = (sixth_byte & 0xF) | (seventh_byte & 0xF0);
   ram_bank_number_ = eighth_byte == 0 ? 1 : eighth_byte;
   return true;
+}
+
+bool Cartridge::ReadRomFile(FILE *fp, Byte *data, size_t size) {
+  size_t r;
+  STREAM_RETRY_ON_EINTR(r, fp, fread(data, 1, size, fp));
+  return r == size;
 }
 
 };  // namespace nes
