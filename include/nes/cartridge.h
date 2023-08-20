@@ -32,11 +32,11 @@ class Cartridge {
   /// \return Byte read from CHR-ROM via address.
   Byte ReadCharacterData(Address address);
 
-  /// Get memory maper type.
+  /// Get memory mapper type.
   ///
   /// \return MMaper type.
-  MMaperType GetMMaperType() const {
-    return static_cast<MMaperType>(mmaper_number_); 
+  MMapperType GetMMapperType() const {
+    return static_cast<MMapperType>(mmaper_number_); 
   }
 
  private:
