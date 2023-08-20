@@ -1,7 +1,5 @@
 #include "nes/cartridge.h"
 
-#include <glog/logging.h>
-
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>

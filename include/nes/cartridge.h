@@ -15,7 +15,9 @@ class Cartridge {
   /// \param path Relative or absolute path of game's rom file.
   explicit Cartridge(std::string path);
 
-  /// Init catridge, read all contents of the file and verify its header.
+  /// Init catridge, read all contents of the file and init the cartridge.
+  ///
+  /// \return True if initialize success.
   bool Init();
 
   /// Read the ROM data via address.
@@ -34,6 +36,12 @@ class Cartridge {
   /// \return True if the file header is valid.
   bool ParseHeader(Byte *header);
 
+  /// Read the whole ROM file.
+  ///
+  /// \param fp File pointer.
+  /// \param data Memory address for storing the file data.
+  /// \param size File size or expected read size, if the actual read data size
+  /// is less then the size, error occured. \return True if read success.
   bool ReadRomFile(FILE *fp, Byte *data, size_t size);
 
   /// Game's rom file path.
