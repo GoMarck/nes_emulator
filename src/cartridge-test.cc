@@ -2,7 +2,15 @@
 
 #include <gtest/gtest.h>
 
-TEST(CartridgeTest, Test)
+namespace nes {
+
+class CartridgeTest : public ::testing::Test {
+};
+
+TEST_F(CartridgeTest, TestCartridgeInitBasicFunction)
 {
-  ASSERT_EQ(1, 1);
+  Cartridge cartridge("../resource/Super_mario_brothers.nes");
+  ASSERT_TRUE(cartridge.Init());
 }
+
+}  // namespace nes

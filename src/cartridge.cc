@@ -1,9 +1,5 @@
 #include "nes/cartridge.h"
 
-#include <_stdio.h>
-#include <malloc/_malloc.h>
-#include <sys/syslimits.h>
-
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -16,16 +12,20 @@
 
 namespace nes {
 
+/// Header size is 16 bytes.
+constexpr size_t HEADER_SIZE = 2 << 4;
+/// Trainer size is 512 bytes.
+constexpr size_t TRAINER_SIZE = 2 << 9;
 /// PRG-ROM size is 16 KB.
-constexpr int PRG_ROM_SIZE = 2 << 13;
+constexpr size_t PRG_ROM_SIZE = 2 << 13;
 /// CHR-ROM size is 8 KB.
-constexpr int CHR_ROM_SIZE = 2 << 12;
+constexpr size_t CHR_ROM_SIZE = 2 << 12;
 
 Cartridge::Cartridge(std::string path) : path_(std::move(path)) {}
 
 bool Cartridge::Init() {
   char *absoulte_path = static_cast<char *>(malloc(PATH_MAX + 1));
-  RETURN_FALSE_REPENT_IF(absoulte_path, "malloc failed!");
+  RETURN_FALSE_REPENT_IF(absoulte_path == nullptr, "malloc failed!");
   auto raii = std::unique_ptr<char[]>(absoulte_path);
   RETURN_FALSE_REPENT_IF(
       realpath(path_.c_str(), absoulte_path) == nullptr,
@@ -39,8 +39,8 @@ bool Cartridge::Init() {
   fseek(file, 0L, SEEK_END);
   auto size = ftell(file);
   fseek(file, 0L, SEEK_SET);
-  if (size == 0) {
-    NES_LOG(ERROR) << "Empty file!";
+  if (size <= HEADER_SIZE) {
+    NES_LOG(ERROR) << "Invalid file format!";
     fclose(file);
     return false;
   }
@@ -54,7 +54,34 @@ bool Cartridge::Init() {
   }
   fclose(file);
 
-  RETURN_FALSE_IF(ParseHeader(contents.data()));
+  RETURN_FALSE_IF(!ParseHeader(contents.data()));
+
+  size_t curr_size = HEADER_SIZE;
+  Byte *curr_data = contents.data() + HEADER_SIZE;
+  if (exist_trainer_) {
+    RETURN_FALSE_REPENT_IF(curr_size + TRAINER_SIZE <= size, "Not enough size for trainer");
+    trainer_.resize(TRAINER_SIZE, 0);
+    memcpy(trainer_.data(), curr_data, TRAINER_SIZE);
+    curr_data += TRAINER_SIZE;
+    curr_size += TRAINER_SIZE;
+  }
+
+  for (uint8_t i = 0; i < program_rom_bank_number_; ++i) {
+    RETURN_FALSE_REPENT_IF(curr_size + PRG_ROM_SIZE <= size, "Not enough size for PRG-ROM");
+    std::vector<Byte> program_rom(PRG_ROM_SIZE, 0);
+    memcpy(program_rom.data(), curr_data, PRG_ROM_SIZE);
+    program_data_.emplace_back(std::move(program_rom));
+    curr_data += PRG_ROM_SIZE;
+    curr_size += PRG_ROM_SIZE;
+  }
+
+  for (uint8_t i = 0; i < character_rom_bank_number_; ++i) {
+    
+    std::vector<Byte> character_rom(CHR_ROM_SIZE, 0);
+    memcpy(character_rom.data(), curr_data, CHR_ROM_SIZE);
+    character_data_.emplace_back(std::move(character_rom));
+    curr_data += CHR_ROM_SIZE;
+  }
   return true;
 }
 

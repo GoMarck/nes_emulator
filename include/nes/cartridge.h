@@ -62,11 +62,14 @@ class Cartridge {
   /// Mapper number.
   Byte mmaper_number_;
 
+  /// Trainer data.
+  std::vector<Byte> trainer_;
+
   /// PRG-ROM data.
-  std::vector<Byte> program_data_;
+  std::vector<std::vector<Byte>> program_data_;
 
   /// CHR-ROM data.
-  std::vector<Byte> character_data_;
+  std::vector<std::vector<Byte>> character_data_;
 };
 
 };  // namespace nes
