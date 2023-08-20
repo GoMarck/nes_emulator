@@ -20,10 +20,24 @@ class Cartridge {
   /// \return True if initialize success.
   bool Init();
 
-  /// Read the ROM data via address.
+  /// Read the PRG-ROM data via address.
   ///
-  /// \param address ROM address.
-  Byte Read(Address address);
+  /// \param address PRG-ROM address.
+  /// \return Byte read from PRG-ROM via address.
+  Byte ReadProgramData(Address address);
+
+  /// Read the CHR-ROM data via address.
+  ///
+  /// \param address CHR-ROM address.
+  /// \return Byte read from CHR-ROM via address.
+  Byte ReadCharacterData(Address address);
+
+  /// Get memory maper type.
+  ///
+  /// \return MMaper type.
+  MMaperType GetMMaperType() const {
+    return static_cast<MMaperType>(mmaper_number_); 
+  }
 
  private:
   friend class CartridgeTest;
@@ -74,10 +88,10 @@ class Cartridge {
   std::vector<Byte> trainer_;
 
   /// PRG-ROM data.
-  std::vector<std::vector<Byte>> program_data_;
+  std::vector<Byte> program_data_;
 
   /// CHR-ROM data.
-  std::vector<std::vector<Byte>> character_data_;
+  std::vector<Byte> character_data_;
 };
 
 };  // namespace nes

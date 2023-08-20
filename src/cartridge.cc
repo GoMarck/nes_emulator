@@ -1,5 +1,6 @@
 #include "nes/cartridge.h"
 
+#include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -33,8 +34,8 @@ bool Cartridge::Init() {
   path_ = std::string(absoulte_path);
 
   FILE *fp = fopen(path_.c_str(), "rb");
-  RETURN_FALSE_REPENT_IF(
-      fp == nullptr, "Failed to open fp: " + std::string(strerror(errno)));
+  RETURN_FALSE_REPENT_IF(fp == nullptr,
+                         "Failed to open fp: " + std::string(strerror(errno)));
 
   fseek(fp, 0L, SEEK_END);
   size_t size = ftell(fp);
@@ -67,29 +68,32 @@ bool Cartridge::Init() {
     curr_size += TRAINER_SIZE;
   }
 
-  for (uint8_t i = 0; i < program_rom_bank_number_; ++i) {
-    RETURN_FALSE_REPENT_IF(curr_size + PRG_ROM_SIZE > size,
-                           "Not enough size for PRG-ROM");
-    std::vector<Byte> program_rom(PRG_ROM_SIZE, 0);
-    memcpy(program_rom.data(), curr_data, PRG_ROM_SIZE);
-    program_data_.emplace_back(std::move(program_rom));
-    curr_data += PRG_ROM_SIZE;
-    curr_size += PRG_ROM_SIZE;
-  }
+  size_t program_size = PRG_ROM_SIZE * program_rom_bank_number_;
+  RETURN_FALSE_REPENT_IF(curr_size + program_size > size,
+                         "Not enough size for PRG-ROM");
+  program_data_.resize(program_size);
+  memcpy(program_data_.data(), curr_data, program_size);
+  curr_data += program_size;
+  curr_size += program_size;
 
-  for (uint8_t i = 0; i < character_rom_bank_number_; ++i) {
-    RETURN_FALSE_REPENT_IF(curr_size + CHR_ROM_SIZE > size,
-                           "Not enough size for CHR-ROM");
-    std::vector<Byte> character_rom(CHR_ROM_SIZE, 0);
-    memcpy(character_rom.data(), curr_data, CHR_ROM_SIZE);
-    character_data_.emplace_back(std::move(character_rom));
-    curr_data += CHR_ROM_SIZE;
-    curr_size += CHR_ROM_SIZE;
-  }
+  size_t character_size = CHR_ROM_SIZE * character_rom_bank_number_;
+  RETURN_FALSE_REPENT_IF(curr_size + character_size > size,
+                         "Not enough size for CHR-ROM");
+  character_data_.resize(character_size);
+  memcpy(character_data_.data(), curr_data, character_size);
   return true;
 }
 
-Byte Cartridge::Read(Address address) { return 0; }
+Byte Cartridge::ReadProgramData(Address address) {
+  NES_LOG_IF(FATAL, program_data_.size() < address) << "Read PRG-ROM overflow";
+  return program_data_[address];
+}
+
+Byte Cartridge::ReadCharacterData(Address address) {
+  NES_LOG_IF(FATAL, character_data_.size() < address)
+      << "Read CHR-ROM overflow";
+  return character_data_[address];
+}
 
 bool Cartridge::ParseHeader(Byte *header) {
   RETURN_FALSE_REPENT_IF(header == nullptr, "header pointer is null");
