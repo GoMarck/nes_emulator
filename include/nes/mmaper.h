@@ -30,7 +30,7 @@ class MMapper {
   ///
   /// \param address CHR-ROM address.
   /// \return Byte read from CHR-ROM via address.
-  virtual Byte ReadCharacterData(Address address) = 0;
+  virtual Byte ReadCharacterData(Address address);
 
  protected:
   /// Cartridge instance for reading/writing ROM data.
@@ -40,11 +40,7 @@ class MMapper {
   MMapperType type_;
 };
 
-/// On reset, the first PRG-ROM bank is loaded into $8000 and the last PRG-ROM
-/// bank is loaded into $C000. Switching is only allowe for the bank at $8000,
-/// the one at $C000 is permanently assigned to that location. Since this mapper
-/// has no support for VROM, games using it have 8 KB of VRAM at $0000 in PPU
-/// memory.
+/// Reference from: https://www.nesdev.org/wiki/Programming_NROM
 class NoMapper : public MMapper {
  public:
   explicit NoMapper(std::shared_ptr<Cartridge> cartridge)
@@ -59,12 +55,6 @@ class NoMapper : public MMapper {
   /// \param address PRG-ROM address.
   /// \return Byte read from PRG-ROM via address.
   Byte ReadProgramData(Address address) override;
-
-  /// Read the CHR-ROM data via address.
-  ///
-  /// \param address CHR-ROM address.
-  /// \return Byte read from CHR-ROM via address.
-  Byte ReadCharacterData(Address address) override;
 };
 
 }  // namespace nes
