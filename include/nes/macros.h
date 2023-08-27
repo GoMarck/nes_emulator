@@ -15,7 +15,8 @@
     }                                            \
   } while (false)
 
-// Same as above but for stream API calls like fread() and fwrite().
+/// For stream API calls like fread() and fwrite().
+/// Ref from: https://github.com/apache/kudu/blob/master/src/kudu/gutil/macros.h
 #define STREAM_RETRY_ON_EINTR(nread, stream, expr)                  \
   do {                                                              \
     static_assert(std::is_unsigned<decltype(nread)>::value == true, \

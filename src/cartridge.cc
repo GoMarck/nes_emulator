@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "nes/logging.h"
-#include "nes/marco.h"
+#include "nes/macros.h"
 
 namespace nes {
 

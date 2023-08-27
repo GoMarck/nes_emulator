@@ -15,6 +15,8 @@ class Cartridge {
   /// \param path Relative or absolute path of game's rom file.
   explicit Cartridge(std::string path);
 
+  ~Cartridge() = default;
+
   /// Init catridge, read all contents of the file and init the cartridge.
   ///
   /// \return True if initialize success.
