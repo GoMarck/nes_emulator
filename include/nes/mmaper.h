@@ -9,7 +9,7 @@
 
 namespace nes {
 
-// 用于扩展内存的一个装置，位于卡带中，不同的卡带携带有不同的mmaper
+/// Memory-mapper for CPU/PPU read/write data from/to ROM.
 class MMapper {
  public:
   /// Construct from Cartridge.

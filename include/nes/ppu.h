@@ -159,4 +159,5 @@ class PPU {
   /// VRAM address increasement according to PPUCTRL bit 3, 1 or 32.
   int increasement_;
 };
+
 }  // namespace nes

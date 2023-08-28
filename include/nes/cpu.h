@@ -14,5 +14,6 @@ class CPU : public WriteCallable, ReadCallable {
   ~CPU() override = default;
 
  private:
+  std::shared_ptr<MainBus> main_bus_;
 };
 }  // namespace nes
