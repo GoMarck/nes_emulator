@@ -5,6 +5,10 @@
 #include "nes/type.h"
 
 namespace nes {
+
+using WriteCallback = std::function<void(Byte)>;
+using ReadCallbak = std::function<Byte(void)>;
+
 class Callable {
  public:
   Callable() = default;
@@ -17,7 +21,7 @@ class WriteCallable : public Callable {
 
   ~WriteCallable() override = default;
 
-  void SetWriteCallback(Address address, std::function<void(Byte)>);
+  virtual void SetWriteCallback(Address address, std::function<void(Byte)>) = 0;
 };
 
 class ReadCallable : public Callable {
@@ -26,6 +30,6 @@ class ReadCallable : public Callable {
 
   ~ReadCallable() override = default;
 
-  void SetReadCallback(Address address, std::function<Byte(void)>);
+  virtual void SetReadCallback(Address address, std::function<Byte(void)>) = 0;
 };
 }  // namespace nes

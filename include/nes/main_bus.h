@@ -19,6 +19,8 @@ class MainBus {
 
   ~MainBus() = default;
 
+  
+
  private:
   /// Memory-mapper for PRG-ROM access.
   std::shared_ptr<MMapper> mmapper_;
