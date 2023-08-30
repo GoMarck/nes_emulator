@@ -39,6 +39,21 @@ ROM 全称为 Read-Only-Memory，即只读内存，它从卡带（Cartridge）�
 
 ### 0.2 I/O Registers
 
+### 2. 指令与寻址模式
+6502 的寻址模式共有以下11种：
+- Zero Page
+- Indexed Zero Page
+- Absolute
+- Indexed Absolute
+- Indirect
+- Implied
+- Accumulator
+- Immediate
+- Relative
+- Indexed Indirect
+- Indirect Indexed
+某一个指令可能具体一到多种寻址模式，它们通过不同的机器码来做区分，不同寻址模式的具体行为如下。
+
 CPU指令集分类：按照指令集的寻址方式不同进行分类
 
 http://www.oxyron.de/html/opcodes02.html
