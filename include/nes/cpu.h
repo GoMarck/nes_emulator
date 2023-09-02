@@ -75,14 +75,15 @@ class CPU : public WriteCallable, ReadCallable {
   /// 
   /// 7  bit  0
   /// ---- ----
-  /// NVsB DIZC
-  /// || | ||||
-  /// || | |||+- Carry Flag (1 on unsigned overflow)
-  /// || | ||+-- Zero Flag (1 when all bits of a result are 0)
-  /// || | |+--- Interrupt Disable (when 1, no interupts will occur 
-  /// || | |     (exceptions are IRQs forced by BRK and NMIs))
-  /// || | +---- Decimal Mode (not used, always 1)
-  /// || +------ Break Flag (1 when interupt was caused by a BRK)
+  /// NV#B DIZC
+  /// |||| ||||
+  /// |||| |||+- Carry Flag (1 on unsigned overflow)
+  /// |||| ||+-- Zero Flag (1 when all bits of a result are 0)
+  /// |||| |+--- Interrupt Disable (when 1, no interupts will occur 
+  /// |||| |     (exceptions are IRQs forced by BRK and NMIs))
+  /// |||| +---- Decimal Mode (1 when CPU in BCD mode)
+  /// |||+------ Break Flag (1 when interupt was caused by a BRK)
+  /// ||+------- Unused, always 1
   /// |+-------- Overflow Flag (1 on signed overflow)
   /// +--------- Negative Flag (1 when result is negative)
   Byte status_;
