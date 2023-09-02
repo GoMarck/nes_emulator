@@ -32,7 +32,7 @@ class CPU : public WriteCallable, ReadCallable {
   /// Set status register interrupt flag.
   ///
   /// \param flag True indicates set interrupt disable flag.
-  void SetInterruptDisable(bool flag);  
+  void SetInterruptDisable(bool flag);
 
   /// Get status register interrupt flag.
   ///
@@ -72,17 +72,19 @@ class CPU : public WriteCallable, ReadCallable {
 
   /// The status register contains a number of single bit flags which are set or
   /// cleared when instructions are executed.
-  ///  Carry Flag (C)
-  ///  Zero Flag (Z)
-  ///  Interrupt Disable (I)
-  ///  Decimal Mode (D)
-  ///  Break Command (B)
-  ///  Overflow Flag (V)
-  ///  Negative Flag (N)
   /// 
-  /// The status register layout shown as follow:
-  ///  7 6 5 4 3 2 1 0
-  /// |N|V| |B|D|I|Z|C|
+  /// 7  bit  0
+  /// ---- ----
+  /// NVsB DIZC
+  /// || | ||||
+  /// || | |||+- Carry Flag (1 on unsigned overflow)
+  /// || | ||+-- Zero Flag (1 when all bits of a result are 0)
+  /// || | |+--- Interrupt Disable (when 1, no interupts will occur 
+  /// || | |     (exceptions are IRQs forced by BRK and NMIs))
+  /// || | +---- Decimal Mode (not used, always 1)
+  /// || +------ Break Flag (1 when interupt was caused by a BRK)
+  /// |+-------- Overflow Flag (1 on signed overflow)
+  /// +--------- Negative Flag (1 when result is negative)
   Byte status_;
 
   std::vector<WriteCallback> write_callbacks_;
