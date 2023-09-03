@@ -8,7 +8,7 @@ namespace nes {
 
 /// Operation code.
 enum Opcode : Byte {
-  NUL = 0, 
+  NUL = 0,
 
   /// Logical and arithmetic code
   ORA,  /// A:=A or {adr}
@@ -70,7 +70,7 @@ enum Opcode : Byte {
   CLI,  /// I:=0
   SEI,  /// I:=1
   CLV,  /// V:=0
-  NOP,  /// 
+  NOP,  ///
 };
 
 enum AddressMode : Byte {
@@ -87,5 +87,10 @@ enum AddressMode : Byte {
   IND,
   REL,
 };
+
+extern Opcode opcode_matrix[OPCODE_SIZE];
+extern AddressMode opcode_addr_mode_matrix[OPCODE_SIZE];
+extern bool opcode_addtional_cycle_matrix[OPCODE_SIZE];
+extern Byte opcode_cycle_matrix[OPCODE_SIZE];
 
 };  // namespace nes

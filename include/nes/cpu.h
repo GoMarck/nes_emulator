@@ -1,9 +1,11 @@
 #pragma once
 
+#include <functional>
 #include <memory>
 #include <vector>
 
 #include "nes/callable.h"
+#include "nes/instruction.h"
 #include "nes/main_bus.h"
 #include "nes/type.h"
 
@@ -29,12 +31,15 @@ class CPU : public WriteCallable, ReadCallable {
                        std::function<Byte(void)> callback) override;
 
  private:
+  /// Decode the instruction and execute.
+  void Execute();
+
   /// Set status register carry flag.
   void SetCarryFlag();
 
   /// Clear status register carry flag.
   void ClearCarryFlag();
-  
+
   /// Set status register decimal mode.
   void SetDecimalMode();
 
@@ -46,7 +51,7 @@ class CPU : public WriteCallable, ReadCallable {
 
   /// Clear status register interrupt flag.
   void ClearInterruptDisable();
-  
+
   /// Clear status register overflow flag.
   void ClearOverflowFlag();
 
@@ -88,14 +93,14 @@ class CPU : public WriteCallable, ReadCallable {
 
   /// The status register contains a number of single bit flags which are set or
   /// cleared when instructions are executed.
-  /// 
+  ///
   /// 7  bit  0
   /// ---- ----
   /// NV#B DIZC
   /// |||| ||||
   /// |||| |||+- Carry Flag (1 on unsigned overflow)
   /// |||| ||+-- Zero Flag (1 when all bits of a result are 0)
-  /// |||| |+--- Interrupt Disable (when 1, no interupts will occur 
+  /// |||| |+--- Interrupt Disable (when 1, no interupts will occur
   /// |||| |     (exceptions are IRQs forced by BRK and NMIs))
   /// |||| +---- Decimal Mode (1 when CPU in BCD mode)
   /// |||+------ Break Flag (1 when interupt was caused by a BRK)
@@ -110,6 +115,11 @@ class CPU : public WriteCallable, ReadCallable {
 
   /// Main bus for memory access.
   std::shared_ptr<MainBus> main_bus_;
+
+  std::unordered_map<Opcode, std::function<void(CPU *, AddressMode)>>
+      opcode_handler_list_;
+
+  Byte skip_steps_;
 };
 
 }  // namespace nes

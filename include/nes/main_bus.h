@@ -19,7 +19,9 @@ class MainBus {
 
   ~MainBus() = default;
 
-  
+  Byte Read(Address address);
+
+  void Write(Address address, Byte data);
 
  private:
   /// Memory-mapper for PRG-ROM access.
