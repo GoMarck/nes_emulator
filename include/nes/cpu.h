@@ -9,7 +9,7 @@
 
 namespace nes {
 
-/// Central Processing Unit base on 2A03.
+/// Central Processing Unit base on 6502.
 class CPU : public WriteCallable, ReadCallable {
  public:
   CPU() = default;
@@ -95,4 +95,5 @@ class CPU : public WriteCallable, ReadCallable {
   /// Main bus for memory access.
   std::shared_ptr<MainBus> main_bus_;
 };
+
 }  // namespace nes
