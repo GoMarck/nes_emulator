@@ -2,6 +2,11 @@
 
 namespace nes {
 
+extern Opcode opcode_matrix[OPCODE_SIZE]; 
+extern AddressMode opcode_addr_mode_matrix[OPCODE_SIZE];
+extern bool opcode_addtional_cycle_matrix[OPCODE_SIZE];
+extern Byte opcode_cycle_matrix[OPCODE_SIZE];
+
 // clang-format off
 
 /// Reference from: http://www.oxyron.de/html/opcodes02.html

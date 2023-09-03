@@ -29,10 +29,26 @@ class CPU : public WriteCallable, ReadCallable {
                        std::function<Byte(void)> callback) override;
 
  private:
+  /// Set status register carry flag.
+  void SetCarryFlag();
+
+  /// Clear status register carry flag.
+  void ClearCarryFlag();
+  
+  /// Set status register decimal mode.
+  void SetDecimalMode();
+
+  /// Clear status register decimal mode.
+  void ClearDecimalMode();
+
   /// Set status register interrupt flag.
-  ///
-  /// \param flag True indicates set interrupt disable flag.
-  void SetInterruptDisable(bool flag);
+  void SetInterruptDisable();
+
+  /// Clear status register interrupt flag.
+  void ClearInterruptDisable();
+  
+  /// Clear status register overflow flag.
+  void ClearOverflowFlag();
 
   /// Get status register interrupt flag.
   ///

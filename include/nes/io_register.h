@@ -3,6 +3,7 @@
 #include "nes/type.h"
 
 namespace nes {
+
 /// PPU 8 memory-mapped registers to CPU. These nominally sit at $2000 through
 /// $2007 in the CPU's address space, but because they're incompletely decoded,
 /// they're mirrored in every 8 bytes from $2008 through $3FFF.
@@ -154,4 +155,5 @@ enum IORegister : Address {
   /// or ROM can be used as well.
   OAMDMA = 0x4014
 };
+
 }  // namespace nes
