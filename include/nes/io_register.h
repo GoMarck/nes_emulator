@@ -23,8 +23,7 @@ enum IORegister : Address {
   ///   |||| +---- Sprite pattern table address for 8x8 sprites
   ///   ||||       (0: $0000; 1: $1000; ignored in 8x16 mode)
   ///   |||+------ Background pattern table address (0: $0000; 1: $1000)
-  ///   ||+------- Sprite size (0: 8x8 pixels; 1: 8x16 pixels – see PPU OAM#Byte
-  ///   1)
+  ///   ||+------- Sprite size (0: 8x8 pixels; 1: 8x16 pixels – see PPU OAM#Byte1)
   ///   |+-------- PPU master/slave select
   ///   |          (0: read backdrop from EXT pins; 1: output color on EXT pins)
   ///   +--------- Generate an NMI at the start of the

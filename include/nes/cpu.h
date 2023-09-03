@@ -30,10 +30,6 @@ class CPU : public WriteCallable, ReadCallable {
   void SetReadCallback(Address address,
                        std::function<Byte(void)> callback) override;
 
- private:
-  /// Decode the instruction and execute.
-  void Execute();
-
   /// Set status register carry flag.
   void SetCarryFlag();
 
@@ -59,6 +55,52 @@ class CPU : public WriteCallable, ReadCallable {
   ///
   /// \return True if interrupt disable flag is not set.
   bool Interruptible() const;
+
+  /// Set accumlator register.
+  ///
+  /// \param a Data.
+  void SetA(Byte a) {
+    accumulator_ = a;
+  }
+
+  /// Get accumlator register value.
+  ///
+  /// \return Accumlator value.
+  Byte GetA() const {
+    return accumulator_;
+  }
+
+  void SetX(Byte x) {
+    x_ = x;
+  }
+
+  Byte GetX() const {
+    return x_;
+  }
+
+  void SetY(Byte y) {
+    y_ = y;
+  }
+
+  Byte GetY() const {
+    return y_;
+  }
+
+  void IncreaseProgramCounter(Word step) {
+    program_counter_ += step;
+  }
+
+  void SetProgramCounter(Word program_counter) {
+    program_counter_ = program_counter;
+  }
+
+  void StackPush(Byte data);
+
+  Byte StackPop();
+
+ private:
+  /// Decode the instruction and execute.
+  void Execute();
 
   /// The program counter is a 16-bit register which holds the address of the
   /// next instruction to be executed. As instructions are executed, the value
