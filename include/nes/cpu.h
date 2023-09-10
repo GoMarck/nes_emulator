@@ -14,7 +14,7 @@ namespace nes {
 /// Central Processing Unit base on 6502.
 class CPU : public WriteCallable, ReadCallable {
  public:
-  CPU() = default;
+  explicit CPU(std::shared_ptr<MainBus> bus);
 
   ~CPU() override = default;
 
@@ -99,6 +99,9 @@ class CPU : public WriteCallable, ReadCallable {
   Byte StackPop();
 
  private:
+  /// Power up and initialize the state.
+  void PowerUp();
+
   /// Decode the instruction and execute.
   void Execute();
 

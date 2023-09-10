@@ -23,7 +23,10 @@ class MainBus {
 
   void Write(Address address, Byte data);
 
- private:
+ private:  
+  /// Power up and initialize the state.
+  void PowerUp();
+
   /// Memory-mapper for PRG-ROM access.
   std::shared_ptr<MMapper> mmapper_;
 };

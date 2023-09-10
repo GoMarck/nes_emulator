@@ -79,6 +79,9 @@ class PPU {
 
  private:
   enum State { PRE_RENDER = 0, RENDER, POST_RENDER, VERTICAL_BLANK };
+ 
+  /// Power up and initialize the state.
+  void PowerUp();
 
   bool EnableRender() const {
     return enable_background_render_ && enable_sprite_render_;
@@ -107,6 +110,27 @@ class PPU {
 
   /// First/second write toggle.
   bool w;
+
+  /// PPUCTRL
+  Byte ppu_ctrl_;
+
+  /// PPUMASK
+  Byte ppu_mask_;
+
+  /// PPUSTATUS
+  Byte ppu_status_;
+
+  /// OAMADDR
+  Byte oam_addr_;
+
+  /// PPUSCROLL
+  Byte ppu_scroll_;
+
+  /// PPUADDR
+  Byte ppu_addr_;
+
+  /// PPUDATA
+  Byte ppu_data_;
 
   /// Shift register for background first tile.
   Word background_tile_low_;

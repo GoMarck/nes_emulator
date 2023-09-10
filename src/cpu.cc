@@ -1,11 +1,29 @@
 #include "nes/cpu.h"
 
+#include <memory>
+
 #include "nes/instruction.h"
 #include "nes/logging.h"
+#include "nes/main_bus.h"
 
 namespace nes {
 
-void CPU::Reset() {}
+CPU::CPU(std::shared_ptr<MainBus> bus) : main_bus_(std::move(bus)) {
+  PowerUp();
+}
+
+void CPU::PowerUp() {
+  accumulator_ = 0;
+  x_ = 0;
+  y_ = 0;
+  stack_pointer_ = 0xFD;
+  status_ = 0x34;  // IRQ disabled.
+}
+
+void CPU::Reset() {
+  stack_pointer_ -= 0x3;
+  SetInterruptDisable();
+}
 
 void CPU::Tick() {}
 
