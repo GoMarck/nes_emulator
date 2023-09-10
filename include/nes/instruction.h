@@ -1,10 +1,16 @@
 #pragma once
 
+#include <functional>
+#include <unordered_map>
+
 #include "nes/type.h"
 
 #define OPCODE_SIZE 256
 
 namespace nes {
+
+class CPU;
+class MainBus;
 
 /// Operation code.
 enum Opcode : Byte {
@@ -70,7 +76,7 @@ enum Opcode : Byte {
   CLI,  /// I:=0
   SEI,  /// I:=1
   CLV,  /// V:=0
-  NOP,  ///
+  NOP,  /// Dumb
 };
 
 enum AddressMode : Byte {
@@ -92,5 +98,12 @@ extern Opcode opcode_matrix[OPCODE_SIZE];
 extern AddressMode opcode_addr_mode_matrix[OPCODE_SIZE];
 extern bool opcode_addtional_cycle_matrix[OPCODE_SIZE];
 extern Byte opcode_cycle_matrix[OPCODE_SIZE];
+
+using OpcodeHandler = std::function<void(Byte, CPU *, MainBus *, Word, AddressMode)>;
+
+/// Initialize the opcode handler table.
+///
+/// \param hanlders Handler table needs to be initialized.
+void InitOpcodeHandlers(std::unordered_map<Byte, OpcodeHandler> &handlers);
 
 };  // namespace nes

@@ -1,6 +1,304 @@
 #include "nes/instruction.h"
 
+#include "nes/logging.h"
+#include "nes/main_bus.h"
+#include "nes/type.h"
+
 namespace nes {
+
+void ORA_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void AND_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void EOR_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void ADC_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void SBC_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void CMP_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void CPX_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void CPY_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void DEC_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void DEX_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void DEY_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void INC_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void INX_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void INY_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void ASL_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void ROL_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void LSR_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void ROR_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void LDA_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void STA_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void LDX_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void STX_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void LDY_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void STY_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void TAX_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void TXA_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void TAY_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void TYA_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void TSX_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void TXS_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void PLA_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void PHA_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void PLP_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void PHP_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void BPL_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void BMI_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void BVC_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void BVS_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void BCC_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void BCS_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void BNE_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void BEQ_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void BRK_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void RTI_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void JSR_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void RTS_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void JMP_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void BIT_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void CLC_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void SEC_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void CLD_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void SED_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void CLI_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void SEI_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void CLV_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+void NOP_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
+                 AddressMode mode);
+
+void InitOpcodeHandlers(std::unordered_map<Byte, OpcodeHandler> &handlers) {
+  for (Byte i = 0; i < 0xFF; ++i) {
+    Opcode code = opcode_matrix[i];
+    switch (code) {
+      case NUL:
+        continue;
+      case ORA:
+        handlers.emplace(code, ORA_handler);
+        break;
+      case AND:
+        handlers.emplace(code, AND_handler);
+        break;
+      case EOR:
+        handlers.emplace(code, EOR_handler);
+        break;
+      case ADC:
+        handlers.emplace(code, ADC_handler);
+        break;
+      case SBC:
+        handlers.emplace(code, SBC_handler);
+        break;
+      case CMP:
+        handlers.emplace(code, CMP_handler);
+        break;
+      case CPX:
+        handlers.emplace(code, CPX_handler);
+        break;
+      case CPY:
+        handlers.emplace(code, CPY_handler);
+        break;
+      case DEC:
+        handlers.emplace(code, DEC_handler);
+        break;
+      case DEX:
+        handlers.emplace(code, DEX_handler);
+        break;
+      case DEY:
+        handlers.emplace(code, DEY_handler);
+        break;
+      case INC:
+        handlers.emplace(code, INC_handler);
+        break;
+      case INX:
+        handlers.emplace(code, INX_handler);
+        break;
+      case INY:
+        handlers.emplace(code, INY_handler);
+        break;
+      case ASL:
+        handlers.emplace(code, ASL_handler);
+        break;
+      case ROL:
+        handlers.emplace(code, ROL_handler);
+        break;
+      case LSR:
+        handlers.emplace(code, LSR_handler);
+        break;
+      case ROR:
+        handlers.emplace(code, ROR_handler);
+        break;
+      case LDA:
+        handlers.emplace(code, LDA_handler);
+        break;
+      case STA:
+        handlers.emplace(code, STA_handler);
+        break;
+      case LDX:
+        handlers.emplace(code, LDX_handler);
+        break;
+      case STX:
+        handlers.emplace(code, STX_handler);
+        break;
+      case LDY:
+        handlers.emplace(code, LDY_handler);
+        break;
+      case STY:
+        handlers.emplace(code, STY_handler);
+        break;
+      case TAX:
+        handlers.emplace(code, TAX_handler);
+        break;
+      case TXA:
+        handlers.emplace(code, TXA_handler);
+        break;
+      case TAY:
+        handlers.emplace(code, TAY_handler);
+        break;
+      case TYA:
+        handlers.emplace(code, TYA_handler);
+        break;
+      case TSX:
+        handlers.emplace(code, TSX_handler);
+        break;
+      case TXS:
+        handlers.emplace(code, TXS_handler);
+        break;
+      case PLA:
+        handlers.emplace(code, PLA_handler);
+        break;
+      case PHA:
+        handlers.emplace(code, PHA_handler);
+        break;
+      case PLP:
+        handlers.emplace(code, PLP_handler);
+        break;
+      case PHP:
+        handlers.emplace(code, PHP_handler);
+        break;
+      case BPL:
+        handlers.emplace(code, BPL_handler);
+        break;
+      case BMI:
+        handlers.emplace(code, BMI_handler);
+        break;
+      case BVC:
+        handlers.emplace(code, BVC_handler);
+        break;
+      case BVS:
+        handlers.emplace(code, BVS_handler);
+        break;
+      case BCC:
+        handlers.emplace(code, BCC_handler);
+        break;
+      case BCS:
+        handlers.emplace(code, BCS_handler);
+        break;
+      case BNE:
+        handlers.emplace(code, BNE_handler);
+        break;
+      case BEQ:
+        handlers.emplace(code, BEQ_handler);
+        break;
+      case BRK:
+        handlers.emplace(code, BRK_handler);
+        break;
+      case RTI:
+        handlers.emplace(code, RTI_handler);
+        break;
+      case JSR:
+        handlers.emplace(code, JSR_handler);
+        break;
+      case RTS:
+        handlers.emplace(code, RTS_handler);
+        break;
+      case JMP:
+        handlers.emplace(code, JMP_handler);
+        break;
+      case BIT:
+        handlers.emplace(code, BIT_handler);
+        break;
+      case CLC:
+        handlers.emplace(code, CLC_handler);
+        break;
+      case SEC:
+        handlers.emplace(code, SEC_handler);
+        break;
+      case CLD:
+        handlers.emplace(code, CLD_handler);
+        break;
+      case SED:
+        handlers.emplace(code, SED_handler);
+        break;
+      case CLI:
+        handlers.emplace(code, CLI_handler);
+        break;
+      case SEI:
+        handlers.emplace(code, SEI_handler);
+        break;
+      case CLV:
+        handlers.emplace(code, CLV_handler);
+        break;
+      case NOP:
+        handlers.emplace(code, NOP_handler);
+        break;
+      default:
+        NES_LOG(FATAL) << "Unrecognized opcode: " << code;
+        break;
+    }
+  }
+}
 
 // clang-format off
 
