@@ -86,15 +86,21 @@ class CPU : public WriteCallable, ReadCallable {
 
   Byte GetY() const { return y_; }
 
+  void SetStackPointer(Byte stack_pointer) { stack_pointer_ = stack_pointer; }
+
+  Byte GetStackPointer() const { return stack_pointer_; }
+
+  void SetStatus(Byte status) { status_ = status; }
+
+  Byte GetStatus() const { return status_; }
+
   void IncreaseProgramCounter(Word step) { program_counter_ += step; }
 
   void SetProgramCounter(Word program_counter) {
     program_counter_ = program_counter;
   }
 
-  Word GetProgramCounter() const {
-    return program_counter_;
-  }
+  Word GetProgramCounter() const { return program_counter_; }
 
   void StackPush(Byte data);
 

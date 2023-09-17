@@ -130,24 +130,56 @@ Byte CalculateCycles(Byte code, bool page_crossed) {
   return cycles - 1;
 }
 
+bool IsNegative(Byte data) { return (data & 0x80) != 0; }
+
 Byte ORA_handler(Byte code, CPU *cpu, MainBus *bus) {
   CHECK(opcode_matrix[code] == Opcode::ORA) << "Invalid code: " << code;
   cpu->IncreaseProgramCounter(1);
-  auto a = cpu->GetA();
+  Byte a = cpu->GetA();
   Byte operand;
   bool page_crossed = ParseOperand(code, cpu, bus, &operand);
   a |= operand;
   cpu->SetA(a);
   if (a == 0) {
     cpu->SetZeroFlag();
-  } else if ((a & 0x80) != 0) {
+  } else if (IsNegative(a)) {
     cpu->SetNegativeFlag();
   }
   return CalculateCycles(code, page_crossed);
 }
 
-Byte AND_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte EOR_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte AND_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::AND) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  Byte a = cpu->GetA();
+  Byte operand;
+  bool page_crossed = ParseOperand(code, cpu, bus, &operand);
+  a &= operand;
+  cpu->SetA(a);
+  if (a == 0) {
+    cpu->SetZeroFlag();
+  } else if (IsNegative(a)) {
+    cpu->SetNegativeFlag();
+  }
+  return CalculateCycles(code, page_crossed);
+}
+
+Byte EOR_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::EOR) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  Byte a = cpu->GetA();
+  Byte operand;
+  bool page_crossed = ParseOperand(code, cpu, bus, &operand);
+  a ^= operand;
+  cpu->SetA(a);
+  if (a == 0) {
+    cpu->SetZeroFlag();
+  } else if (IsNegative(a)) {
+    cpu->SetNegativeFlag();
+  }
+  return CalculateCycles(code, page_crossed);
+}
+
 Byte ADC_handler(Byte code, CPU *cpu, MainBus *bus);
 Byte SBC_handler(Byte code, CPU *cpu, MainBus *bus);
 Byte CMP_handler(Byte code, CPU *cpu, MainBus *bus);
@@ -163,22 +195,167 @@ Byte ASL_handler(Byte code, CPU *cpu, MainBus *bus);
 Byte ROL_handler(Byte code, CPU *cpu, MainBus *bus);
 Byte LSR_handler(Byte code, CPU *cpu, MainBus *bus);
 Byte ROR_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte LDA_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte STA_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte LDX_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte STX_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte LDY_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte STY_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte TAX_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte TXA_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte TAY_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte TYA_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte TSX_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte TXS_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte PLA_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte PHA_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte PLP_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte PHP_handler(Byte code, CPU *cpu, MainBus *bus);
+
+Byte LDA_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::LDA) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  Byte operand;
+  bool page_crossed = ParseOperand(code, cpu, bus, &operand);
+  cpu->SetA(bus->Read(operand));
+  return CalculateCycles(code, page_crossed);
+}
+
+Byte STA_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::STA) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  Byte operand;
+  bool page_crossed = ParseOperand(code, cpu, bus, &operand);
+  bus->Write(operand, cpu->GetA());
+  return CalculateCycles(code, page_crossed);
+}
+
+Byte LDX_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::LDA) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  Byte operand;
+  bool page_crossed = ParseOperand(code, cpu, bus, &operand);
+  cpu->SetX(bus->Read(operand));
+  return CalculateCycles(code, page_crossed);
+}
+
+Byte STX_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::STX) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  Byte operand;
+  bool page_crossed = ParseOperand(code, cpu, bus, &operand);
+  bus->Write(operand, cpu->GetX());
+  return CalculateCycles(code, page_crossed);
+}
+
+Byte LDY_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::LDY) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  Byte operand;
+  bool page_crossed = ParseOperand(code, cpu, bus, &operand);
+  cpu->SetY(bus->Read(operand));
+  return CalculateCycles(code, page_crossed);
+}
+
+Byte STY_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::STY) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  Byte operand;
+  bool page_crossed = ParseOperand(code, cpu, bus, &operand);
+  cpu->SetY(bus->Read(operand));
+  return CalculateCycles(code, page_crossed);
+}
+
+Byte TAX_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::TAX) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  cpu->SetX(cpu->GetA());
+  auto x = cpu->GetX();
+  if (x == 0) {
+    cpu->SetZeroFlag();
+  } else if (IsNegative(x)) {
+    cpu->SetNegativeFlag();
+  }
+  return CalculateCycles(code, false);
+}
+
+Byte TXA_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::TXA) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  cpu->SetA(cpu->GetX());
+  auto a = cpu->GetA();
+  if (a == 0) {
+    cpu->SetZeroFlag();
+  } else if (IsNegative(a)) {
+    cpu->SetNegativeFlag();
+  }
+  return CalculateCycles(code, false);
+}
+
+Byte TAY_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::TAY) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  cpu->SetY(cpu->GetA());
+  auto y = cpu->GetY();
+  if (y == 0) {
+    cpu->SetZeroFlag();
+  } else if (IsNegative(y)) {
+    cpu->SetNegativeFlag();
+  }
+  return CalculateCycles(code, false);
+}
+
+Byte TYA_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::TXA) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  cpu->SetA(cpu->GetY());
+  auto a = cpu->GetA();
+  if (a == 0) {
+    cpu->SetZeroFlag();
+  } else if (IsNegative(a)) {
+    cpu->SetNegativeFlag();
+  }
+  return CalculateCycles(code, false);
+}
+
+Byte TSX_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::TSX) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  cpu->SetX(cpu->GetStackPointer());
+  auto x = cpu->GetX();
+  if (x == 0) {
+    cpu->SetZeroFlag();
+  } else if (IsNegative(x)) {
+    cpu->SetNegativeFlag();
+  }
+  return CalculateCycles(code, false);
+}
+
+Byte TXS_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::TXS) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  cpu->SetStackPointer(cpu->GetX());
+  return CalculateCycles(code, false);
+}
+
+Byte PLA_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::PLA) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  cpu->SetA(cpu->StackPop());
+  auto a = cpu->GetA();
+  if (a == 0) {
+    cpu->SetZeroFlag();
+  } else if (IsNegative(a)) {
+    cpu->SetNegativeFlag();
+  }
+  return CalculateCycles(code, false);
+}
+
+Byte PHA_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::PHA) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  cpu->StackPush(cpu->GetA());
+  return CalculateCycles(code, false);
+}
+
+Byte PLP_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::PLP) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  cpu->SetStatus(cpu->StackPop());
+  return CalculateCycles(code, false);
+}
+
+Byte PHP_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::PHP) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  cpu->StackPush(cpu->GetStatus());
+  return CalculateCycles(code, false);
+}
+
 Byte BPL_handler(Byte code, CPU *cpu, MainBus *bus);
 Byte BMI_handler(Byte code, CPU *cpu, MainBus *bus);
 Byte BVC_handler(Byte code, CPU *cpu, MainBus *bus);
@@ -193,14 +370,61 @@ Byte JSR_handler(Byte code, CPU *cpu, MainBus *bus);
 Byte RTS_handler(Byte code, CPU *cpu, MainBus *bus);
 Byte JMP_handler(Byte code, CPU *cpu, MainBus *bus);
 Byte BIT_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte CLC_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte SEC_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte CLD_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte SED_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte CLI_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte SEI_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte CLV_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte NOP_handler(Byte code, CPU *cpu, MainBus *bus);
+
+Byte CLC_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::CLC) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  cpu->ClearCarryFlag();
+  return CalculateCycles(code, false);
+}
+
+Byte SEC_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::SEC) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  cpu->SetCarryFlag();
+  return CalculateCycles(code, false);
+}
+
+Byte CLD_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::CLD) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  cpu->ClearDecimalMode();
+  return CalculateCycles(code, false);
+}
+
+Byte SED_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::SED) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  cpu->SetDecimalMode();
+  return CalculateCycles(code, false);
+}
+
+Byte CLI_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::CLI) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  cpu->ClearInterruptDisable();
+  return CalculateCycles(code, false);
+}
+
+Byte SEI_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::SEI) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  cpu->SetInterruptDisable();
+  return CalculateCycles(code, false);
+}
+
+Byte CLV_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::CLV) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  cpu->ClearOverflowFlag();
+  return CalculateCycles(code, false);
+}
+
+Byte NOP_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::NOP) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  return CalculateCycles(code, false);
+}
 
 void InitOpcodeHandlers(std::unordered_map<Byte, OpcodeHandler> &handlers) {
   for (Byte i = 0; i < 0xFF; ++i) {
