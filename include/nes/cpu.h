@@ -36,6 +36,12 @@ class CPU : public WriteCallable, ReadCallable {
   /// Clear status register carry flag.
   void ClearCarryFlag();
 
+  /// Set status register zero flag.
+  void SetZeroFlag();
+
+  /// Clear status register zero flag.
+  void ClearZeroFlag();
+
   /// Set status register decimal mode.
   void SetDecimalMode();
 
@@ -51,6 +57,12 @@ class CPU : public WriteCallable, ReadCallable {
   /// Clear status register overflow flag.
   void ClearOverflowFlag();
 
+  /// Set status register negative flag.
+  void SetNegativeFlag();
+
+  /// Clear status register negative flag.
+  void ClearNegativeFlag();
+
   /// Get status register interrupt flag.
   ///
   /// \return True if interrupt disable flag is not set.
@@ -59,39 +71,29 @@ class CPU : public WriteCallable, ReadCallable {
   /// Set accumlator register.
   ///
   /// \param a Data.
-  void SetA(Byte a) {
-    accumulator_ = a;
-  }
+  void SetA(Byte a) { accumulator_ = a; }
 
   /// Get accumlator register value.
   ///
   /// \return Accumlator value.
-  Byte GetA() const {
-    return accumulator_;
-  }
+  Byte GetA() const { return accumulator_; }
 
-  void SetX(Byte x) {
-    x_ = x;
-  }
+  void SetX(Byte x) { x_ = x; }
 
-  Byte GetX() const {
-    return x_;
-  }
+  Byte GetX() const { return x_; }
 
-  void SetY(Byte y) {
-    y_ = y;
-  }
+  void SetY(Byte y) { y_ = y; }
 
-  Byte GetY() const {
-    return y_;
-  }
+  Byte GetY() const { return y_; }
 
-  void IncreaseProgramCounter(Word step) {
-    program_counter_ += step;
-  }
+  void IncreaseProgramCounter(Word step) { program_counter_ += step; }
 
   void SetProgramCounter(Word program_counter) {
     program_counter_ = program_counter;
+  }
+
+  Word GetProgramCounter() const {
+    return program_counter_;
   }
 
   void StackPush(Byte data);
@@ -161,10 +163,9 @@ class CPU : public WriteCallable, ReadCallable {
   /// Main bus for memory access.
   std::shared_ptr<MainBus> main_bus_;
 
-  std::unordered_map<Opcode, std::function<void(CPU *, AddressMode)>>
-      opcode_handler_list_;
+  std::unordered_map<Opcode, OpcodeHandler> opcode_handler_map_;
 
-  Byte skip_steps_;
+  Byte skip_cycles_;
 };
 
 }  // namespace nes

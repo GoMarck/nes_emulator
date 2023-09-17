@@ -99,7 +99,7 @@ extern AddressMode opcode_addr_mode_matrix[OPCODE_SIZE];
 extern bool opcode_addtional_cycle_matrix[OPCODE_SIZE];
 extern Byte opcode_cycle_matrix[OPCODE_SIZE];
 
-using OpcodeHandler = std::function<void(Byte, CPU *, MainBus *, Word, AddressMode)>;
+using OpcodeHandler = std::function<Byte(Byte, CPU *, MainBus *)>;
 
 /// Initialize the opcode handler table.
 ///

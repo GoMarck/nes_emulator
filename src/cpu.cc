@@ -28,18 +28,25 @@ void CPU::Reset() {
 void CPU::Tick() {}
 
 void CPU::Execute() {
-  Byte opcode = main_bus_->Read(program_counter_++);
-  auto it = opcode_handler_list_.find(static_cast<Opcode>(opcode));
-  if (it == opcode_handler_list_.end()) {
+  if (skip_cycles_ != 0) {
+    --skip_cycles_;
+    return;
+  }
+  Byte opcode = main_bus_->Read(program_counter_);
+  auto it = opcode_handler_map_.find(static_cast<Opcode>(opcode));
+  if (it == opcode_handler_map_.end()) {
     NES_LOG(FATAL) << "Opcode handler undefined: " << opcode;
   }
-
-  it->second(this, opcode_addr_mode_matrix[opcode]);
+  skip_cycles_ = it->second(opcode, this, main_bus_.get());
 }
 
 void CPU::SetCarryFlag() { status_ |= 0x1; }
 
 void CPU::ClearCarryFlag() { status_ &= 0xFE; }
+
+void CPU::SetZeroFlag() { status_ |= 0x2; }
+
+void CPU::ClearZeroFlag() { status_ &= 0xFD; }
 
 void CPU::SetDecimalMode() { status_ |= 0x8; }
 
@@ -50,6 +57,10 @@ void CPU::SetInterruptDisable() { status_ |= 0x4; }
 void CPU::ClearInterruptDisable() { status_ &= 0xFB; }
 
 void CPU::ClearOverflowFlag() { status_ &= 0xBF; }
+
+void CPU::SetNegativeFlag() { status_ |= 0x80; }
+
+void CPU::ClearNegativeFlag() { status_ &= 0x7F; }
 
 bool CPU::Interruptible() const { return (status_ & 0x4) == 0; }
 

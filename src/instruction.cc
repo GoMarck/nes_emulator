@@ -1,123 +1,193 @@
 #include "nes/instruction.h"
 
+#include <glog/logging.h>
+
+#include "nes/cpu.h"
 #include "nes/logging.h"
 #include "nes/main_bus.h"
 #include "nes/type.h"
 
 namespace nes {
 
-void ORA_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void AND_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void EOR_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void ADC_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void SBC_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void CMP_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void CPX_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void CPY_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void DEC_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void DEX_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void DEY_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void INC_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void INX_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void INY_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void ASL_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void ROL_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void LSR_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void ROR_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void LDA_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void STA_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void LDX_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void STX_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void LDY_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void STY_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void TAX_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void TXA_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void TAY_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void TYA_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void TSX_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void TXS_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void PLA_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void PHA_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void PLP_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void PHP_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void BPL_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void BMI_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void BVC_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void BVS_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void BCC_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void BCS_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void BNE_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void BEQ_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void BRK_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void RTI_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void JSR_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void RTS_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void JMP_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void BIT_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void CLC_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void SEC_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void CLD_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void SED_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void CLI_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void SEI_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void CLV_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
-void NOP_handler(Byte code, CPU *cpu, MainBus *bus, Word operand,
-                 AddressMode mode);
+bool IsPageCrossed(Word address, Word increament) {
+  return (address & 0xFF) != ((address + increament) & 0xFF);
+}
+
+bool ParseImmediate(CPU *cpu, MainBus *bus, Word *operand) {
+  *operand = bus->Read(cpu->GetProgramCounter());
+  cpu->IncreaseProgramCounter(1);
+  return false;
+}
+
+bool ParseZeroPage(CPU *cpu, MainBus *bus, Word *operand) {
+  Word address = bus->Read(cpu->GetProgramCounter());
+  *operand = bus->Read(address);
+  cpu->IncreaseProgramCounter(1);
+  return false;
+}
+
+bool ParseZeroPageX(CPU *cpu, MainBus *bus, Word *operand) {
+  Word address = (bus->Read(cpu->GetProgramCounter()) + cpu->GetX()) & 0xFF;
+  *operand = bus->Read(address);
+  cpu->IncreaseProgramCounter(1);
+  return false;
+}
+
+bool ParseZeroPageY(CPU *cpu, MainBus *bus, Word *operand) {
+  Word address = (bus->Read(cpu->GetProgramCounter()) + cpu->GetY()) & 0xFF;
+  *operand = bus->Read(address);
+  cpu->IncreaseProgramCounter(1);
+  return false;
+}
+
+bool ParseAbsolute(CPU *cpu, MainBus *bus, Word *operand) {
+  Word address = bus->Read(cpu->GetProgramCounter()) +
+                 (bus->Read(cpu->GetProgramCounter() + 1) << 0x8);
+  *operand = bus->Read(address);
+  cpu->IncreaseProgramCounter(2);
+  return false;
+}
+
+bool ParseAbsoluteX(CPU *cpu, MainBus *bus, Word *operand) {
+  Word address = bus->Read(cpu->GetProgramCounter()) +
+                 (bus->Read(cpu->GetProgramCounter() + 1) << 0x8);
+  bool page_crossed = IsPageCrossed(address, cpu->GetX());
+  address += cpu->GetX();
+  *operand = bus->Read(address);
+  cpu->IncreaseProgramCounter(2);
+  return page_crossed;
+}
+
+bool ParseAbsoluteY(CPU *cpu, MainBus *bus, Word *operand) {
+  Word address = bus->Read(cpu->GetProgramCounter()) +
+                 (bus->Read(cpu->GetProgramCounter() + 1) << 0x8);
+  bool page_crossed = IsPageCrossed(address, cpu->GetY());
+  address += cpu->GetY();
+  *operand = bus->Read(address);
+  cpu->IncreaseProgramCounter(2);
+  return page_crossed;
+}
+
+bool ParseIndexedZeroPageX(CPU *cpu, MainBus *bus, Word *operand) {
+  return false;
+}
+
+bool ParseIndexedZeroPageY(CPU *cpu, MainBus *bus, Word *operand) {
+  return false;
+}
+
+bool ParseOperand(Byte code, CPU *cpu, MainBus *bus, Word *operand) {
+  AddressMode mode = opcode_addr_mode_matrix[code];
+  switch (mode) {
+    case AddressMode::IMP:
+      return false;
+    case AddressMode::IMM:
+      break;
+    case AddressMode::REL:
+      break;
+    case AddressMode::IND:
+      break;
+    case AddressMode::ABY:
+      break;
+    case AddressMode::ABX:
+      break;
+    case AddressMode::ABS:
+      break;
+    case AddressMode::IZY:
+      break;
+    case AddressMode::IZX:
+      break;
+    case AddressMode::ZPY:
+      break;
+    case AddressMode::ZPX:
+      break;
+    case AddressMode::ZP:
+      break;
+    default:
+      LOG(FATAL) << "Unrecognized address mode: " << mode;
+  }
+}
+
+Byte CalculateCycles(Byte code, bool page_crossed) {
+  Byte cycles = opcode_cycle_matrix[code];
+  CHECK(cycles > 0) << "Invalid zero cycle happen, code: " << code;
+  if (page_crossed && opcode_addtional_cycle_matrix[code]) {
+    cycles += 1;
+  }
+  return cycles - 1;
+}
+
+Byte ORA_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::ORA) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  auto a = cpu->GetA();
+  Word operand;
+  bool page_crossed = ParseOperand(code, cpu, bus, &operand);
+  a |= operand;
+  cpu->SetA(a);
+  if (a == 0) {
+    cpu->SetZeroFlag();
+  } else if ((a & 0x80) != 0) {
+    cpu->SetNegativeFlag();
+  }
+  return CalculateCycles(code, page_crossed);
+}
+
+Byte AND_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte EOR_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte ADC_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte SBC_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte CMP_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte CPX_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte CPY_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte DEC_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte DEX_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte DEY_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte INC_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte INX_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte INY_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte ASL_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte ROL_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte LSR_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte ROR_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte LDA_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte STA_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte LDX_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte STX_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte LDY_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte STY_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte TAX_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte TXA_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte TAY_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte TYA_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte TSX_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte TXS_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte PLA_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte PHA_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte PLP_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte PHP_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte BPL_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte BMI_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte BVC_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte BVS_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte BCC_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte BCS_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte BNE_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte BEQ_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte BRK_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte RTI_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte JSR_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte RTS_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte JMP_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte BIT_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte CLC_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte SEC_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte CLD_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte SED_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte CLI_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte SEI_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte CLV_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte NOP_handler(Byte code, CPU *cpu, MainBus *bus);
 
 void InitOpcodeHandlers(std::unordered_map<Byte, OpcodeHandler> &handlers) {
   for (Byte i = 0; i < 0xFF; ++i) {
