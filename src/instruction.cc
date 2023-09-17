@@ -9,48 +9,50 @@
 
 namespace nes {
 
-bool IsPageCrossed(Word address, Word increament) {
-  return (address & 0xFF) != ((address + increament) & 0xFF);
+bool IsPageCrossed(Address address, Word increament) {
+  return (address & 0xFF00) != ((address + increament) & 0xFF00);
 }
 
-bool ParseImmediate(CPU *cpu, MainBus *bus, Word *operand) {
+bool ParseImmediate(CPU *cpu, MainBus *bus, Byte *operand) {
   *operand = bus->Read(cpu->GetProgramCounter());
   cpu->IncreaseProgramCounter(1);
   return false;
 }
 
-bool ParseZeroPage(CPU *cpu, MainBus *bus, Word *operand) {
-  Word address = bus->Read(cpu->GetProgramCounter());
+bool ParseZeroPage(CPU *cpu, MainBus *bus, Byte *operand) {
+  Address address = bus->Read(cpu->GetProgramCounter());
   *operand = bus->Read(address);
   cpu->IncreaseProgramCounter(1);
   return false;
 }
 
-bool ParseZeroPageX(CPU *cpu, MainBus *bus, Word *operand) {
-  Word address = (bus->Read(cpu->GetProgramCounter()) + cpu->GetX()) & 0xFF;
+bool ParseZeroPageX(CPU *cpu, MainBus *bus, Byte *operand) {
+  Address address = bus->Read(cpu->GetProgramCounter()) + cpu->GetX();
   *operand = bus->Read(address);
   cpu->IncreaseProgramCounter(1);
   return false;
 }
 
-bool ParseZeroPageY(CPU *cpu, MainBus *bus, Word *operand) {
-  Word address = (bus->Read(cpu->GetProgramCounter()) + cpu->GetY()) & 0xFF;
+bool ParseZeroPageY(CPU *cpu, MainBus *bus, Byte *operand) {
+  Address address = bus->Read(cpu->GetProgramCounter()) + cpu->GetY();
   *operand = bus->Read(address);
   cpu->IncreaseProgramCounter(1);
   return false;
 }
 
-bool ParseAbsolute(CPU *cpu, MainBus *bus, Word *operand) {
-  Word address = bus->Read(cpu->GetProgramCounter()) +
-                 (bus->Read(cpu->GetProgramCounter() + 1) << 0x8);
+bool ParseAbsolute(CPU *cpu, MainBus *bus, Byte *operand) {
+  Address address =
+      bus->Read(cpu->GetProgramCounter()) +
+      (static_cast<Address>(bus->Read(cpu->GetProgramCounter() + 1)) << 0x8);
   *operand = bus->Read(address);
   cpu->IncreaseProgramCounter(2);
   return false;
 }
 
-bool ParseAbsoluteX(CPU *cpu, MainBus *bus, Word *operand) {
-  Word address = bus->Read(cpu->GetProgramCounter()) +
-                 (bus->Read(cpu->GetProgramCounter() + 1) << 0x8);
+bool ParseAbsoluteX(CPU *cpu, MainBus *bus, Byte *operand) {
+  Address address =
+      bus->Read(cpu->GetProgramCounter()) +
+      (static_cast<Address>(bus->Read(cpu->GetProgramCounter() + 1)) << 0x8);
   bool page_crossed = IsPageCrossed(address, cpu->GetX());
   address += cpu->GetX();
   *operand = bus->Read(address);
@@ -58,51 +60,62 @@ bool ParseAbsoluteX(CPU *cpu, MainBus *bus, Word *operand) {
   return page_crossed;
 }
 
-bool ParseAbsoluteY(CPU *cpu, MainBus *bus, Word *operand) {
-  Word address = bus->Read(cpu->GetProgramCounter()) +
-                 (bus->Read(cpu->GetProgramCounter() + 1) << 0x8);
+bool ParseAbsoluteY(CPU *cpu, MainBus *bus, Byte *operand) {
+  Address address =
+      bus->Read(cpu->GetProgramCounter()) +
+      (static_cast<Address>(bus->Read(cpu->GetProgramCounter() + 1)) << 0x8);
   bool page_crossed = IsPageCrossed(address, cpu->GetY());
-  address += cpu->GetY();
-  *operand = bus->Read(address);
+  *operand = bus->Read(address + cpu->GetY());
   cpu->IncreaseProgramCounter(2);
   return page_crossed;
 }
 
-bool ParseIndexedZeroPageX(CPU *cpu, MainBus *bus, Word *operand) {
+bool ParseIndexedZeroPageY(CPU *cpu, MainBus *bus, Byte *operand) {
+  Byte index_address = bus->Read(cpu->GetProgramCounter());
+  Address address =
+      (static_cast<Address>(bus->Read(index_address + 1)) << 0x8) +
+      bus->Read(index_address);
+  bool page_crossed = IsPageCrossed(address, cpu->GetY());
+  *operand = bus->Read(address + cpu->GetY());
+  cpu->IncreaseProgramCounter(1);
+  return page_crossed;
+}
+
+bool ParseIndexedZeroPageX(CPU *cpu, MainBus *bus, Byte *operand) {
+  Byte index_address = bus->Read(cpu->GetProgramCounter()) + cpu->GetX();
+  Address address =
+      (static_cast<Address>(bus->Read(index_address + 1)) << 0x8) +
+      bus->Read(index_address);
+  *operand = bus->Read(address);
+  cpu->IncreaseProgramCounter(1);
   return false;
 }
 
-bool ParseIndexedZeroPageY(CPU *cpu, MainBus *bus, Word *operand) {
-  return false;
-}
-
-bool ParseOperand(Byte code, CPU *cpu, MainBus *bus, Word *operand) {
+bool ParseOperand(Byte code, CPU *cpu, MainBus *bus, Byte *operand) {
   AddressMode mode = opcode_addr_mode_matrix[code];
   switch (mode) {
     case AddressMode::IMP:
+    case AddressMode::REL:
+    case AddressMode::IND:
       return false;
     case AddressMode::IMM:
-      break;
-    case AddressMode::REL:
-      break;
-    case AddressMode::IND:
-      break;
+      return ParseImmediate(cpu, bus, operand);
     case AddressMode::ABY:
-      break;
+      return ParseAbsoluteY(cpu, bus, operand);
     case AddressMode::ABX:
-      break;
+      return ParseAbsoluteX(cpu, bus, operand);
     case AddressMode::ABS:
-      break;
+      return ParseAbsolute(cpu, bus, operand);
     case AddressMode::IZY:
-      break;
+      return ParseIndexedZeroPageY(cpu, bus, operand);
     case AddressMode::IZX:
-      break;
+      return ParseZeroPageX(cpu, bus, operand);
     case AddressMode::ZPY:
-      break;
+      return ParseIndexedZeroPageY(cpu, bus, operand);
     case AddressMode::ZPX:
-      break;
+      return ParseZeroPageX(cpu, bus, operand);
     case AddressMode::ZP:
-      break;
+      return ParseZeroPage(cpu, bus, operand);
     default:
       LOG(FATAL) << "Unrecognized address mode: " << mode;
   }
@@ -121,7 +134,7 @@ Byte ORA_handler(Byte code, CPU *cpu, MainBus *bus) {
   CHECK(opcode_matrix[code] == Opcode::ORA) << "Invalid code: " << code;
   cpu->IncreaseProgramCounter(1);
   auto a = cpu->GetA();
-  Word operand;
+  Byte operand;
   bool page_crossed = ParseOperand(code, cpu, bus, &operand);
   a |= operand;
   cpu->SetA(a);
