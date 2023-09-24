@@ -36,6 +36,9 @@ class CPU : public WriteCallable, ReadCallable {
   /// Clear status register carry flag.
   void ClearCarryFlag();
 
+  /// Get status register carry flag.
+  bool CarryFlag() const;
+
   /// Set status register zero flag.
   void SetZeroFlag();
 
@@ -53,6 +56,9 @@ class CPU : public WriteCallable, ReadCallable {
 
   /// Clear status register interrupt flag.
   void ClearInterruptDisable();
+
+  /// Clear status register overflow flag.
+  void SetOverflowFlag();
 
   /// Clear status register overflow flag.
   void ClearOverflowFlag();

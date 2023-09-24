@@ -1,6 +1,7 @@
 #include "nes/instruction.h"
 
 #include <glog/logging.h>
+#include <sys/errno.h>
 
 #include "nes/cpu.h"
 #include "nes/logging.h"
@@ -13,112 +14,116 @@ bool IsPageCrossed(Address address, Word increament) {
   return (address & 0xFF00) != ((address + increament) & 0xFF00);
 }
 
-bool ParseImmediate(CPU *cpu, MainBus *bus, Byte *operand) {
+bool ParseImmediateOperand(CPU *cpu, MainBus *bus, Byte *operand) {
   *operand = bus->Read(cpu->GetProgramCounter());
   cpu->IncreaseProgramCounter(1);
   return false;
 }
 
-bool ParseZeroPage(CPU *cpu, MainBus *bus, Byte *operand) {
-  Address address = bus->Read(cpu->GetProgramCounter());
-  *operand = bus->Read(address);
+Address ParseZeroPageAddress(CPU *cpu, MainBus *bus) {
   cpu->IncreaseProgramCounter(1);
-  return false;
+  return bus->Read(cpu->GetProgramCounter());
 }
 
-bool ParseZeroPageX(CPU *cpu, MainBus *bus, Byte *operand) {
-  Address address = bus->Read(cpu->GetProgramCounter()) + cpu->GetX();
-  *operand = bus->Read(address);
+Address ParseZeroPageXAddress(CPU *cpu, MainBus *bus) {
   cpu->IncreaseProgramCounter(1);
-  return false;
+  return bus->Read(cpu->GetProgramCounter()) + cpu->GetX();
 }
 
-bool ParseZeroPageY(CPU *cpu, MainBus *bus, Byte *operand) {
-  Address address = bus->Read(cpu->GetProgramCounter()) + cpu->GetY();
-  *operand = bus->Read(address);
+Address ParseZeroPageYAddress(CPU *cpu, MainBus *bus) {
   cpu->IncreaseProgramCounter(1);
-  return false;
+  return bus->Read(cpu->GetProgramCounter()) + cpu->GetY();
 }
 
-bool ParseAbsolute(CPU *cpu, MainBus *bus, Byte *operand) {
-  Address address =
-      bus->Read(cpu->GetProgramCounter()) +
-      (static_cast<Address>(bus->Read(cpu->GetProgramCounter() + 1)) << 0x8);
-  *operand = bus->Read(address);
+Address ParseAbsoluteAddress(CPU *cpu, MainBus *bus) {
   cpu->IncreaseProgramCounter(2);
-  return false;
+  return (static_cast<Address>(bus->Read(cpu->GetProgramCounter() + 1))
+          << 0x8) +
+         bus->Read(cpu->GetProgramCounter());
 }
 
-bool ParseAbsoluteX(CPU *cpu, MainBus *bus, Byte *operand) {
+Address ParseAbsoluteXAddress(CPU *cpu, MainBus *bus, bool *page_crossed) {
+  cpu->IncreaseProgramCounter(2);
   Address address =
-      bus->Read(cpu->GetProgramCounter()) +
-      (static_cast<Address>(bus->Read(cpu->GetProgramCounter() + 1)) << 0x8);
-  bool page_crossed = IsPageCrossed(address, cpu->GetX());
+      (static_cast<Address>(bus->Read(cpu->GetProgramCounter() + 1)) << 0x8) +
+      bus->Read(cpu->GetProgramCounter());
+  *page_crossed = IsPageCrossed(address, cpu->GetX());
   address += cpu->GetX();
-  *operand = bus->Read(address);
-  cpu->IncreaseProgramCounter(2);
-  return page_crossed;
+  return address;
 }
 
-bool ParseAbsoluteY(CPU *cpu, MainBus *bus, Byte *operand) {
+Address ParseAbsoulteYAddress(CPU *cpu, MainBus *bus, bool *page_crossed) {
+  cpu->IncreaseProgramCounter(2);
   Address address =
-      bus->Read(cpu->GetProgramCounter()) +
-      (static_cast<Address>(bus->Read(cpu->GetProgramCounter() + 1)) << 0x8);
-  bool page_crossed = IsPageCrossed(address, cpu->GetY());
-  *operand = bus->Read(address + cpu->GetY());
-  cpu->IncreaseProgramCounter(2);
-  return page_crossed;
+      (static_cast<Address>(bus->Read(cpu->GetProgramCounter() + 1)) << 0x8) +
+      bus->Read(cpu->GetProgramCounter());
+  *page_crossed = IsPageCrossed(address, cpu->GetY());
+  address += cpu->GetY();
+  return address;
 }
 
-bool ParseIndexedZeroPageY(CPU *cpu, MainBus *bus, Byte *operand) {
+Address ParseIndexedZeroPageXAddress(CPU *cpu, MainBus *bus) {
+  cpu->IncreaseProgramCounter(1);
+  Byte index_address = bus->Read(cpu->GetProgramCounter()) + cpu->GetX();
+  return (static_cast<Address>(bus->Read(index_address + 1)) << 0x8) +
+         bus->Read(index_address);
+}
+
+Address ParseIndexedZeroPageYAddress(CPU *cpu, MainBus *bus,
+                                     bool *page_crossed) {
+  cpu->IncreaseProgramCounter(1);
   Byte index_address = bus->Read(cpu->GetProgramCounter());
   Address address =
       (static_cast<Address>(bus->Read(index_address + 1)) << 0x8) +
       bus->Read(index_address);
-  bool page_crossed = IsPageCrossed(address, cpu->GetY());
-  *operand = bus->Read(address + cpu->GetY());
-  cpu->IncreaseProgramCounter(1);
-  return page_crossed;
+  *page_crossed = IsPageCrossed(address, cpu->GetY());
+  address += cpu->GetY();
+  return address;
 }
 
-bool ParseIndexedZeroPageX(CPU *cpu, MainBus *bus, Byte *operand) {
-  Byte index_address = bus->Read(cpu->GetProgramCounter()) + cpu->GetX();
-  Address address =
-      (static_cast<Address>(bus->Read(index_address + 1)) << 0x8) +
-      bus->Read(index_address);
-  *operand = bus->Read(address);
-  cpu->IncreaseProgramCounter(1);
-  return false;
+Address ParseAddress(AddressMode mode, CPU *cpu, MainBus *bus,
+                     bool *page_crossed) {
+  *page_crossed = false;
+  switch (mode) {
+    case AddressMode::ABY:
+      return ParseAbsoulteYAddress(cpu, bus, page_crossed);
+    case AddressMode::ABX:
+      return ParseAbsoluteXAddress(cpu, bus, page_crossed);
+    case AddressMode::ABS:
+      return ParseAbsoluteAddress(cpu, bus);
+    case AddressMode::IZY:
+      return ParseIndexedZeroPageYAddress(cpu, bus, page_crossed);
+    case AddressMode::IZX:
+      return ParseIndexedZeroPageXAddress(cpu, bus);
+    case AddressMode::ZPY:
+      return ParseZeroPageYAddress(cpu, bus);
+    case AddressMode::ZPX:
+      return ParseZeroPageXAddress(cpu, bus);
+    case AddressMode::ZP:
+      return ParseZeroPageAddress(cpu, bus);
+    case AddressMode::IMP:
+    case AddressMode::REL:
+    case AddressMode::IND:
+    case AddressMode::IMM:
+    default:
+      LOG(FATAL) << "Unrecognized or invalid address mode: " << mode;
+  }
 }
 
 bool ParseOperand(Byte code, CPU *cpu, MainBus *bus, Byte *operand) {
   AddressMode mode = opcode_addr_mode_matrix[code];
-  switch (mode) {
-    case AddressMode::IMP:
-    case AddressMode::REL:
-    case AddressMode::IND:
-      return false;
-    case AddressMode::IMM:
-      return ParseImmediate(cpu, bus, operand);
-    case AddressMode::ABY:
-      return ParseAbsoluteY(cpu, bus, operand);
-    case AddressMode::ABX:
-      return ParseAbsoluteX(cpu, bus, operand);
-    case AddressMode::ABS:
-      return ParseAbsolute(cpu, bus, operand);
-    case AddressMode::IZY:
-      return ParseIndexedZeroPageY(cpu, bus, operand);
-    case AddressMode::IZX:
-      return ParseZeroPageX(cpu, bus, operand);
-    case AddressMode::ZPY:
-      return ParseIndexedZeroPageY(cpu, bus, operand);
-    case AddressMode::ZPX:
-      return ParseZeroPageX(cpu, bus, operand);
-    case AddressMode::ZP:
-      return ParseZeroPage(cpu, bus, operand);
-    default:
-      LOG(FATAL) << "Unrecognized address mode: " << mode;
+  if (mode == AddressMode::IMP || mode == AddressMode::REL ||
+      mode == AddressMode::IND) {
+    return false;
   }
+  if (mode == IMM) {
+    return ParseImmediateOperand(cpu, bus, operand);
+  }
+
+  bool page_crossed;
+  Address address = ParseAddress(mode, cpu, bus, &page_crossed);
+  *operand = bus->Read(address);
+  return page_crossed;
 }
 
 Byte CalculateCycles(Byte code, bool page_crossed) {
@@ -180,37 +185,350 @@ Byte EOR_handler(Byte code, CPU *cpu, MainBus *bus) {
   return CalculateCycles(code, page_crossed);
 }
 
-Byte ADC_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte SBC_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte CMP_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte CPX_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte CPY_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte DEC_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte DEX_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte DEY_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte INC_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte INX_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte INY_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte ASL_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte ROL_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte LSR_handler(Byte code, CPU *cpu, MainBus *bus);
-Byte ROR_handler(Byte code, CPU *cpu, MainBus *bus);
+Byte ADC_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::ADC) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  Byte operand;
+  bool page_crossed = ParseOperand(code, cpu, bus, &operand);
+  Byte a = cpu->GetA();
+  Byte result = a + operand + static_cast<Byte>(cpu->CarryFlag());
+
+  if (result < a) {
+    cpu->SetCarryFlag();
+  }
+
+  if (((result & 0x80) ^ (a & 0x80)) != 0) {
+    cpu->SetOverflowFlag();
+  }
+
+  if (result == 0) {
+    cpu->SetZeroFlag();
+  }
+
+  if (IsNegative(result)) {
+    cpu->SetNegativeFlag();
+  }
+
+  return CalculateCycles(code, page_crossed);
+}
+
+Byte SBC_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::SBC) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  Byte operand;
+  bool page_crossed = ParseOperand(code, cpu, bus, &operand);
+  Byte a = cpu->GetA();
+  Byte result = a - operand - (1 - static_cast<Byte>(cpu->CarryFlag()));
+
+  if (result < a) {
+    cpu->SetCarryFlag();
+  }
+
+  if (((result & 0x80) ^ (a & 0x80)) != 0) {
+    cpu->SetOverflowFlag();
+  }
+
+  if (result == 0) {
+    cpu->SetZeroFlag();
+  }
+
+  if (IsNegative(result)) {
+    cpu->SetNegativeFlag();
+  }
+
+  return CalculateCycles(code, page_crossed);
+}
+
+Byte CMP_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::CMP) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  Byte operand;
+  bool page_crossed = ParseOperand(code, cpu, bus, &operand);
+  Byte result = cpu->GetA() - operand;
+  if (IsNegative(result)) {
+    cpu->SetNegativeFlag();
+  }
+  if (cpu->GetA() >= operand) {
+    cpu->SetCarryFlag();
+  }
+  if (cpu->GetA() == operand) {
+    cpu->SetZeroFlag();
+  }
+  return CalculateCycles(code, page_crossed);
+}
+
+Byte CPX_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::CPX) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  Byte operand;
+  bool page_crossed = ParseOperand(code, cpu, bus, &operand);
+  Byte result = cpu->GetX() - operand;
+  if (IsNegative(result)) {
+    cpu->SetNegativeFlag();
+  }
+  if (cpu->GetX() >= operand) {
+    cpu->SetCarryFlag();
+  }
+  if (cpu->GetX() == operand) {
+    cpu->SetZeroFlag();
+  }
+  return CalculateCycles(code, page_crossed);
+}
+
+Byte CPY_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::CPY) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  Byte operand;
+  bool page_crossed = ParseOperand(code, cpu, bus, &operand);
+  Byte result = cpu->GetY() - operand;
+  if (IsNegative(result)) {
+    cpu->SetNegativeFlag();
+  }
+  if (cpu->GetY() >= operand) {
+    cpu->SetCarryFlag();
+  }
+  if (cpu->GetY() == operand) {
+    cpu->SetZeroFlag();
+  }
+  return CalculateCycles(code, page_crossed);
+}
+
+Byte DEC_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::DEC) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  bool page_crossed;
+  Address address =
+      ParseAddress(opcode_addr_mode_matrix[code], cpu, bus, &page_crossed);
+  Byte result = bus->Read(address) - 1;
+  bus->Write(address, result);
+  if (result == 0) {
+    cpu->SetZeroFlag();
+  } else if (IsNegative(result)) {
+    cpu->SetNegativeFlag();
+  }
+  return CalculateCycles(code, page_crossed);
+}
+
+Byte DEX_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::DEX) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  cpu->SetX(cpu->GetX() - 1);
+  if (cpu->GetX() == 0) {
+    cpu->SetZeroFlag();
+  } else if (IsNegative(cpu->GetX())) {
+    cpu->SetNegativeFlag();
+  }
+  return CalculateCycles(code, false);
+}
+
+Byte DEY_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::DEY) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  cpu->SetY(cpu->GetY() - 1);
+  if (cpu->GetY() == 0) {
+    cpu->SetZeroFlag();
+  } else if (IsNegative(cpu->GetY())) {
+    cpu->SetNegativeFlag();
+  }
+  return CalculateCycles(code, false);
+}
+
+Byte INC_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::INC) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  bool page_crossed;
+  Address address =
+      ParseAddress(opcode_addr_mode_matrix[code], cpu, bus, &page_crossed);
+  Byte result = bus->Read(address) + 1;
+  bus->Write(address, result);
+  if (result == 0) {
+    cpu->SetZeroFlag();
+  } else if (IsNegative(result)) {
+    cpu->SetNegativeFlag();
+  }
+  return CalculateCycles(code, page_crossed);
+}
+
+Byte INX_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::INX) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  cpu->SetX(cpu->GetX() + 1);
+  if (cpu->GetX() == 0) {
+    cpu->SetZeroFlag();
+  } else if (IsNegative(cpu->GetX())) {
+    cpu->SetNegativeFlag();
+  }
+  return CalculateCycles(code, false);
+}
+
+Byte INY_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::INY) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  cpu->SetY(cpu->GetY() + 1);
+  if (cpu->GetY() == 0) {
+    cpu->SetZeroFlag();
+  } else if (IsNegative(cpu->GetY())) {
+    cpu->SetNegativeFlag();
+  }
+  return CalculateCycles(code, false);
+}
+
+Byte ASL_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::ASL) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  AddressMode mode = opcode_addr_mode_matrix[code];
+  Byte old_val;
+  Byte result;
+  bool page_crossed = false;
+  if (mode == AddressMode::IMP) {
+    old_val = cpu->GetA();
+    result = old_val << 1;
+    cpu->SetA(result);
+  } else {
+    Address address = ParseAddress(mode, cpu, bus, &page_crossed);
+    old_val = bus->Read(address);
+    result = old_val << 1;
+    bus->Write(address, result);
+  }
+
+  if (IsNegative(old_val)) {
+    cpu->SetCarryFlag();
+  } else {
+    cpu->ClearCarryFlag();
+  }
+
+  if (cpu->GetA() == 0) {
+    cpu->SetZeroFlag();
+  }
+
+  if (IsNegative(result)) {
+    cpu->SetNegativeFlag();
+  }
+
+  return CalculateCycles(code, page_crossed);
+}
+
+Byte ROL_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::ROL) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  AddressMode mode = opcode_addr_mode_matrix[code];
+  Byte old_val;
+  Byte result;
+  bool page_crossed = false;
+  if (mode == AddressMode::IMP) {
+    old_val = cpu->GetA();
+    result = old_val << 1 | static_cast<Byte>(cpu->CarryFlag());
+    cpu->SetA(result);
+  } else {
+    Address address = ParseAddress(mode, cpu, bus, &page_crossed);
+    old_val = bus->Read(address);
+    result = old_val << 1 | static_cast<Byte>(cpu->CarryFlag());
+    bus->Write(address, result);
+  }
+
+  if (IsNegative(old_val)) {
+    cpu->SetCarryFlag();
+  } else {
+    cpu->ClearCarryFlag();
+  }
+
+  if (cpu->GetA() == 0) {
+    cpu->SetZeroFlag();
+  }
+
+  if (IsNegative(result)) {
+    cpu->SetNegativeFlag();
+  }
+
+  return CalculateCycles(code, page_crossed);
+}
+
+Byte LSR_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::LSR) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  AddressMode mode = opcode_addr_mode_matrix[code];
+  Byte old_val;
+  Byte result;
+  bool page_crossed = false;
+  if (mode == AddressMode::IMP) {
+    old_val = cpu->GetA();
+    result = old_val >> 1;
+    cpu->SetA(result);
+  } else {
+    Address address = ParseAddress(mode, cpu, bus, &page_crossed);
+    old_val = bus->Read(address);
+    result = old_val >> 1;
+    bus->Write(address, result);
+  }
+
+  if ((old_val & 0x1) == 0) {
+    cpu->ClearCarryFlag();
+  } else {
+    cpu->SetCarryFlag();
+  }
+
+  if (cpu->GetA() == 0) {
+    cpu->SetZeroFlag();
+  }
+
+  if (IsNegative(result)) {
+    cpu->SetNegativeFlag();
+  }
+
+  return CalculateCycles(code, page_crossed);
+}
+
+Byte ROR_handler(Byte code, CPU *cpu, MainBus *bus) {
+  CHECK(opcode_matrix[code] == Opcode::ROR) << "Invalid code: " << code;
+  cpu->IncreaseProgramCounter(1);
+  AddressMode mode = opcode_addr_mode_matrix[code];
+  Byte old_val;
+  Byte result;
+  bool page_crossed = false;
+  if (mode == AddressMode::IMP) {
+    old_val = cpu->GetA();
+    result = old_val >> 1 | (static_cast<Byte>(cpu->CarryFlag()) << 0x7);
+    cpu->SetA(result);
+  } else {
+    Address address = ParseAddress(mode, cpu, bus, &page_crossed);
+    old_val = bus->Read(address);
+    result = old_val << 1 | (static_cast<Byte>(cpu->CarryFlag()) << 0x7);
+    bus->Write(address, result);
+  }
+
+  if ((old_val & 0x1) == 0) {
+    cpu->ClearCarryFlag();
+  } else {
+    cpu->SetCarryFlag();
+  }
+
+  if (cpu->GetA() == 0) {
+    cpu->SetZeroFlag();
+  }
+
+  if (IsNegative(result)) {
+    cpu->SetNegativeFlag();
+  }
+
+  return CalculateCycles(code, page_crossed);
+}
 
 Byte LDA_handler(Byte code, CPU *cpu, MainBus *bus) {
   CHECK(opcode_matrix[code] == Opcode::LDA) << "Invalid code: " << code;
   cpu->IncreaseProgramCounter(1);
   Byte operand;
   bool page_crossed = ParseOperand(code, cpu, bus, &operand);
-  cpu->SetA(bus->Read(operand));
+  cpu->SetA(operand);
   return CalculateCycles(code, page_crossed);
 }
 
 Byte STA_handler(Byte code, CPU *cpu, MainBus *bus) {
   CHECK(opcode_matrix[code] == Opcode::STA) << "Invalid code: " << code;
   cpu->IncreaseProgramCounter(1);
-  Byte operand;
-  bool page_crossed = ParseOperand(code, cpu, bus, &operand);
-  bus->Write(operand, cpu->GetA());
+  bool page_crossed;
+  Address address =
+      ParseAddress(opcode_addr_mode_matrix[code], cpu, bus, &page_crossed);
+  bus->Write(address, cpu->GetA());
   return CalculateCycles(code, page_crossed);
 }
 
@@ -219,16 +537,17 @@ Byte LDX_handler(Byte code, CPU *cpu, MainBus *bus) {
   cpu->IncreaseProgramCounter(1);
   Byte operand;
   bool page_crossed = ParseOperand(code, cpu, bus, &operand);
-  cpu->SetX(bus->Read(operand));
+  cpu->SetX(operand);
   return CalculateCycles(code, page_crossed);
 }
 
 Byte STX_handler(Byte code, CPU *cpu, MainBus *bus) {
   CHECK(opcode_matrix[code] == Opcode::STX) << "Invalid code: " << code;
   cpu->IncreaseProgramCounter(1);
-  Byte operand;
-  bool page_crossed = ParseOperand(code, cpu, bus, &operand);
-  bus->Write(operand, cpu->GetX());
+  bool page_crossed;
+  Address address =
+      ParseAddress(opcode_addr_mode_matrix[code], cpu, bus, &page_crossed);
+  bus->Write(address, cpu->GetX());
   return CalculateCycles(code, page_crossed);
 }
 
@@ -237,16 +556,17 @@ Byte LDY_handler(Byte code, CPU *cpu, MainBus *bus) {
   cpu->IncreaseProgramCounter(1);
   Byte operand;
   bool page_crossed = ParseOperand(code, cpu, bus, &operand);
-  cpu->SetY(bus->Read(operand));
+  cpu->SetY(operand);
   return CalculateCycles(code, page_crossed);
 }
 
 Byte STY_handler(Byte code, CPU *cpu, MainBus *bus) {
   CHECK(opcode_matrix[code] == Opcode::STY) << "Invalid code: " << code;
   cpu->IncreaseProgramCounter(1);
-  Byte operand;
-  bool page_crossed = ParseOperand(code, cpu, bus, &operand);
-  cpu->SetY(bus->Read(operand));
+  bool page_crossed;
+  Address address =
+      ParseAddress(opcode_addr_mode_matrix[code], cpu, bus, &page_crossed);
+  bus->Write(address, cpu->GetY());
   return CalculateCycles(code, page_crossed);
 }
 
