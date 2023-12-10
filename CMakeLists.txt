@@ -39,6 +39,9 @@ target_link_libraries(nes glog::glog sfml-graphics)
 add_executable (nes_emulator src/main.cc)
 target_link_libraries(nes_emulator nes)
 
+add_executable (sfml_test src/sfml-test.cc)
+target_link_libraries(sfml_test sfml-graphics)
+
 ###################################################################
 #                            TEST ZONE                            #                        
 ###################################################################
