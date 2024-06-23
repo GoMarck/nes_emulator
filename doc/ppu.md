@@ -251,15 +251,13 @@ OAM 的数据同步有两种方式：
 1. 设置 OAMADDR 以及 OAMDATA 进行更新
 2. 通过 DMA 进行更新
 
-设置 OAMADDR 以及 OAMDATA 进行更新
----
+#### 设置 OAMADDR 以及 OAMDATA 进行更新
 CPU 通过写入 $2003（OAMADDR），将某个 OAM 的地址起始值写入 PPU 的 OAMADDR 寄存器。
 接着，CPU 通过写入 $2004（OAMDATA），将数据写入 OAMADDR 所指向的地址，从而完成某个 OAM 的更新。
 
 这种方式的缺点是执行的 CPU 周期非常多，更新慢，因此很少使用这种方式进行更新。
 
-通过 DMA 进行更新
----
+#### 通过 DMA 进行更新
 DMA 全称为 Direct Memory Access，它允许将 CPU 中某一页（256 bytes）的内存直接更新到 OAM 中。具体方式是 CPU 通过写入 $4014（OAMDMA），指定一个内存页，接着经过 513-514 个 CPU 时钟周期，这一页中的 256 个字节将会被拷贝到 OAM 中。这是最常用的更新 Sprite 的方式。 
 
 ## 4. PPU 扫描线（Scanline）
@@ -269,7 +267,7 @@ PPU 渲染的方式是通过按行从顶至下渲染扫描线（Scanline）完�
 - Post-Render Scanline
 - Vertical blanking Scalines
 
-### 4.1 Pre-Render Scanline(-1 0r 261)
+### 4.1 Pre-Render Scanline(-1 or 261)
 当扫描线处于 -1（初始化时期）或者 261 时，处于预渲染时期。这条扫描线的主要目的是为了将数据填充进 shift registers 中，而这些数据就是下一条扫描线的前 2 个 Tile 的数据。虽然这个时期并不会产生任何用于渲染的像素，但是 PPU 仍然会像 Visible Scanlines 一样执行相同的内存访问。
 
 此外该 Scanline 的长度还会区分奇偶帧。当为奇数帧的时候，最后一个 PPU 周期将会被跳过（cycle 340不会被执行，直接从 (339, 261) 跳到 (0, 0)），而对于偶数帧来说，cycle 340 则是会被正常执行（从(340, 261) 跳到 (0, 0)）。
@@ -353,36 +351,31 @@ CPU 通过一组 I/O 寄存器与 PPU 进行数据交换：
 
 用 d 表示写入的数据，A ～ H 表示有效的 bit 位，当数据写入各个 I/O 寄存器时，影响如下：
 
-PPUCTRL write
----
+#### PPUCTRL write
 ```bash
 t: ...GH.. ........ <- d: ......GH
    <used elsewhere> <- d: ABCDEF..
 ```
 
-PPUSTATUS read
----
+#### PPUSTATUS read
 ```bash
 w:                  <- 0
 ```
 
-PPUSCROL first write(w = 0)
----
+#### PPUSCROL first write(w = 0)
 ```bash
 t: ....... ...ABCDE <- d: ABCDE...
 x:              FGH <- d: .....FGH
 w:                  <- 1
 ```
 
-PPUSCROLL second write(w = 1)
----
+#### PPUSCROLL second write(w = 1)
 ```bash
 t: FGH..AB CDE..... <- d: ABCDEFGH
 w:                  <- 0
 ```
 
-PPUADDR first write(w = 0)
----
+#### PPUADDR first write(w = 0)
 ```bash
 t: .CDEFGH ........ <- d: ..CDEFGH
        <unused>     <- d: AB......
@@ -390,8 +383,7 @@ t: Z...... ........ <- 0 (bit Z is cleared)
 w:                  <- 1
 ```
 
-PPUADDR second write(w = 1)
----
+#### PPUADDR second write(w = 1)
 ```bash
 t: ....... ABCDEFGH <- d: ABCDEFGH
 v: <...all bits...> <- t: <...all bits...>
@@ -399,14 +391,12 @@ w:                  <- 0
 ```
 需要注意的是 PPUADDR 和 PPUSCROL 是共享 w 寄存器的，因此它们两个读写的行为会影响到彼此。
 
-PPUDATA read and write
----
+#### PPUDATA read and write
 读写 PPUDATA 的时候，将会使 v 寄存器的值增加 1 或者 32，这取决于 PPUCTRL 的 bit 5。
 
 除了上述的寄存器之外，当扫描线位于某些点的时候，也会影响到内部寄存器的值，如下：
 
-所有扫描线的 Dot 256
----
+#### 所有扫描线的 Dot 256
 Dot 256 是每条扫描线可见 Dot 的最后一个，因此 PPU 需要增加 v 寄存器的纵坐标 Y。这是一个相对复杂的计算，因为有可能涉及到 NameTable 的切换等，伪代码如下：
 ```bash
 if ((v & 0x7000) != 0x7000)        // if fine Y < 7
@@ -429,22 +419,19 @@ Row 29 是一个 NameTable 最后一行的 Tile，因此当需要从第 29 行�
 
 而在部分情况下，coarse 的值是有可能大于 29 的，而这将会导致 attribute data 被当作 tile data 读取进来。当它的值增大到 31 时，它将会重新回到 0，并且 NameTable 并不会切换。因此，当一个大于 240 的值被写入到 PPUSCROL 的时候可能会出现负的滚动，1到2行的attribute data 会被读进来并当作 Tile 渲染，此时真实的 Tile 数据便会在attribute data 读取完成之后才会再进行渲染，而一些游戏利用了这个特性来将顶部的 NameTable 移除。
 
-所有扫描线的 Dot 257
----
+#### 所有扫描线的 Dot 257
 当允许渲染的时候，t 寄存器和 v 寄存器产生如下行为：
 ```bash
 v: ....A.. ...BCDEF <- t: ....A.. ...BCDEF
 ```
 
-Pre-Render 时期的 Dot 280 ～ 304
----
+#### Pre-Render 时期的 Dot 280 ～ 304
 当允许渲染的时候，在这个时期 t 寄存器和 v 寄存器会重复如下行为：
 ```bash
 v: GHIA.BC DEF..... <- t: GHIA.BC DEF.....
 ```
 
-扫描线 Dot 328 ～ 下一条扫描的 Dot 256
----
+#### 扫描线 Dot 328 ～ 下一条扫描的 Dot 256
 当允许渲染的时候，PPU 会不断地增加 v 寄存器中 coarse X 的值，用以不断地更新水平位置的 Tile。它会在 Dot 328 以及 336 开始更新，并且在下一条扫描线中的 8，16，24 ... 240，248，256 不断地进行更新。
 
 需要在上一条扫描线进行两次 coarse 更新的原因是：Dot 321 ～ 336 是读取下一条扫描线 Tile 的时期，在此时更新 coarse X 的值才能保证可以不断地读取到对的 Tile。
